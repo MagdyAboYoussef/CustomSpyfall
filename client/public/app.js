@@ -741,7 +741,7 @@ function renderCsvPreview(locations) {
     const checked = state.selectedCsvLocNames.has(loc.Location);
     return `
       <label class="picker-item${checked ? ' checked' : ''}">
-        <input type="checkbox" ${checked ? 'checked' : ''} data-loc="${esc(loc.Location)}" style="display:none" />
+        <input type="checkbox" class="picker-checkbox" value="${esc(loc.Location)}" ${checked ? 'checked' : ''} />
         <div class="picker-item-top">
           <div class="picker-item-name">${esc(loc.Location)}</div>
           ${roles.length ? `<span class="picker-info-btn" data-loc="${esc(loc.Location)}" data-roles="${rolesEncoded}" title="View roles">ℹ</span>` : ''}
@@ -750,26 +750,22 @@ function renderCsvPreview(locations) {
     `;
   }).join('');
 
-  // Toggle selection on card click
-  grid.querySelectorAll('.picker-item').forEach(card => {
-    card.addEventListener('click', (e) => {
-      if (e.target.closest('.picker-info-btn')) return;
-      const cb = card.querySelector('input[type="checkbox"]');
-      const locName = cb.dataset.loc;
-      if (state.selectedCsvLocNames.has(locName)) {
-        state.selectedCsvLocNames.delete(locName);
-        cb.checked = false;
-        card.classList.remove('checked');
+  // Listen on checkbox change — label click natively toggles it, fires change once
+  grid.querySelectorAll('.picker-checkbox').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const label = cb.closest('.picker-item');
+      if (cb.checked) {
+        state.selectedCsvLocNames.add(cb.value);
+        label.classList.add('checked');
       } else {
-        state.selectedCsvLocNames.add(locName);
-        cb.checked = true;
-        card.classList.add('checked');
+        state.selectedCsvLocNames.delete(cb.value);
+        label.classList.remove('checked');
       }
       updateCsvCount();
     });
   });
 
-  // Wire up info buttons
+  // Info button — show roles without toggling the checkbox
   grid.querySelectorAll('.picker-info-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault(); e.stopPropagation();
