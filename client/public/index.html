@@ -374,6 +374,23 @@
     </div>
   </div>
 
+  <!-- Spy guess modal -->
+  <div id="spy-guess-modal" class="loc-info-modal hidden">
+    <div class="loc-info-backdrop"></div>
+    <div class="loc-info-content spy-guess-content">
+      <div id="spy-guess-for-spy">
+        <div class="spy-guess-title">YOU ESCAPED — GUESS THE LOCATION</div>
+        <div class="spy-guess-sub">Correct = +2 pts (total 3) &nbsp;·&nbsp; Wrong = keep your 1 pt</div>
+        <div id="spy-guess-list" class="spy-guess-list"></div>
+      </div>
+      <div id="spy-guess-waiting" class="hidden">
+        <div class="spy-guess-title">SPY ESCAPED</div>
+        <div class="spy-guess-sub">Waiting for the spy to guess the location…</div>
+        <div class="spy-guess-spinner">⏳</div>
+      </div>
+    </div>
+  </div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script src="app.js"></script>
 </body>

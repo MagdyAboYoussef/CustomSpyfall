@@ -233,10 +233,43 @@ function connectSocket() {
     document.getElementById('vote-progress').textContent = `${voteCount} / ${total} voted`;
   });
 
+  socket.on('spy-guess-prompt', (data) => {
+    const isSpy = state.privateInfo?.isSpy;
+    const modal = document.getElementById('spy-guess-modal');
+    document.getElementById('spy-guess-for-spy').classList.toggle('hidden', !isSpy);
+    document.getElementById('spy-guess-waiting').classList.toggle('hidden', isSpy);
+
+    if (isSpy) {
+      const list = document.getElementById('spy-guess-list');
+      list.innerHTML = (data.locations || []).map(loc =>
+        `<button class="btn spy-guess-btn" data-loc="${esc(loc)}">${esc(loc)}</button>`
+      ).join('');
+      list.querySelectorAll('.spy-guess-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.socket.emit('spy-guess', { guessedLocation: btn.dataset.loc });
+          modal.classList.add('hidden');
+        });
+      });
+    }
+    modal.classList.remove('hidden');
+  });
+
   socket.on('game-over', (result) => {
+    document.getElementById('spy-guess-modal').classList.add('hidden');
     result.spyCaught ? SFX.caught() : SFX.escaped();
     renderResultsScreen(result);
     showScreen('results');
+  });
+
+  socket.on('you-were-kicked', () => {
+    showToast('You were kicked from the room', 'error', 4000);
+    leaveRoom();
+  });
+
+  socket.on('player-kicked', ({ name, roomState }) => {
+    state.roomState = roomState;
+    showToast(`${name} was removed from the room`, 'info');
+    renderLobby();
   });
 
   socket.on('room-reset', ({ roomState }) => {
@@ -266,7 +299,7 @@ function showScreen(name) {
 }
 
 function navigateToPhase(phase) {
-  const map = { LOBBY: 'lobby', PLAYING: 'playing', VOTING: 'voting', RESULTS: 'results' };
+  const map = { LOBBY: 'lobby', PLAYING: 'playing', VOTING: 'voting', SPY_GUESS: 'voting', RESULTS: 'results' };
   showScreen(map[phase] || 'lobby');
   if (phase === 'LOBBY') renderLobby();
   if (phase === 'PLAYING') renderPlayingScreen();
@@ -314,6 +347,7 @@ function renderLobby() {
       <div class="player-tile-dot"></div>
       <div class="player-tile-name">${esc(p.name)}</div>
       <div class="player-tile-badge">${p.isHost ? 'HOST' : 'AGENT'}</div>
+      ${state.isHost && !p.isHost && !p.connected ? `<button class="btn-kick" data-id="${esc(p.id)}" title="Kick player">✕</button>` : ''}
     </div>
   `).join('') + rs.spectators.map(s => `
     <div class="player-tile">
@@ -322,6 +356,14 @@ function renderLobby() {
       <div class="player-tile-badge" style="color:var(--amber)">SPECTATOR</div>
     </div>
   `).join('');
+
+  // Kick buttons (host only, offline players)
+  grid.querySelectorAll('.btn-kick').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      state.socket.emit('kick-player', { targetId: btn.dataset.id });
+    });
+  });
 
   // Timer display
   document.getElementById('lobby-timer-display').textContent = `Timer: ${formatTime(rs.timerSeconds)}`;
@@ -539,8 +581,13 @@ function renderResultsScreen(result) {
   verdict.textContent = result.spyCaught ? (multiSpy ? 'SPY CAUGHT' : 'SPY CAUGHT') : (multiSpy ? 'SPIES ESCAPED' : 'SPY ESCAPED');
   verdict.className = 'result-verdict ' + (result.spyCaught ? 'caught' : 'escaped');
 
-  document.getElementById('spy-reveal').innerHTML =
-    `The ${multiSpy ? 'spies were' : 'spy was'} <strong>${spyNames.map(esc).join(', ')}</strong>`;
+  let spyReveal = `The ${multiSpy ? 'spies were' : 'spy was'} <strong>${spyNames.map(esc).join(', ')}</strong>`;
+  if (!result.spyCaught && result.guessedLocation !== undefined) {
+    spyReveal += result.guessCorrect
+      ? ` — guessed <strong>${esc(result.guessedLocation)}</strong> ✓ (+2 pts)`
+      : ` — guessed <strong>${esc(result.guessedLocation)}</strong> ✗`;
+  }
+  document.getElementById('spy-reveal').innerHTML = spyReveal;
 
   document.getElementById('result-location').textContent = result.location;
 

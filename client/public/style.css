@@ -386,16 +386,17 @@ input[type="text"]:focus, input[type="number"]:focus {
 .player-tile {
   background: var(--surface2); border: 1px solid var(--border);
   padding: 0.75rem 1rem; position: relative;
+  display: flex; align-items: center; gap: 0.5rem;
   transition: border-color 0.2s;
 }
 .player-tile.host { border-color: var(--red-dim); }
 .player-tile.disconnected { opacity: 0.4; }
 .player-tile-name {
-  font-family: var(--font-mono); font-size: 0.85rem; font-weight: 600;
+  font-family: var(--font-mono); font-size: 0.85rem; font-weight: 600; flex: 1;
 }
 .player-tile-badge {
   font-size: 0.55rem; letter-spacing: 0.15em; color: var(--red);
-  font-family: var(--font-mono); margin-top: 0.2rem;
+  font-family: var(--font-mono);
 }
 .player-tile-dot {
   position: absolute; top: 0.5rem; right: 0.5rem;
@@ -853,6 +854,38 @@ input[type="text"]:focus, input[type="number"]:focus {
   font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-muted);
   line-height: 1.4;
 }
+
+/* ─── Kick button ─────────────────────────────────────────────────────────── */
+.btn-kick {
+  margin-left: auto; background: none; border: 1px solid var(--red-dim);
+  color: var(--red); border-radius: 3px; padding: 0.1rem 0.4rem;
+  font-size: 0.65rem; cursor: pointer; line-height: 1; flex-shrink: 0;
+}
+.btn-kick:hover { background: rgba(232,0,28,0.15); border-color: var(--red); }
+
+/* ─── Spy guess modal ─────────────────────────────────────────────────────── */
+.spy-guess-content {
+  max-width: 480px; text-align: center;
+}
+.spy-guess-title {
+  font-family: var(--font-display); font-size: 1.4rem; color: var(--red);
+  letter-spacing: 0.1em; margin-bottom: 0.4rem;
+}
+.spy-guess-sub {
+  font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);
+  margin-bottom: 1.2rem;
+}
+.spy-guess-list {
+  display: flex; flex-direction: column; gap: 0.4rem; max-height: 55vh; overflow-y: auto;
+}
+.spy-guess-btn {
+  width: 100%; text-align: left; padding: 0.55rem 0.9rem;
+  font-family: var(--font-mono); font-size: 0.8rem;
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+  cursor: pointer; border-radius: 3px; transition: border-color 0.15s, background 0.15s;
+}
+.spy-guess-btn:hover { border-color: var(--red); background: rgba(232,0,28,0.08); color: var(--red); }
+.spy-guess-spinner { font-size: 2rem; margin-top: 1rem; }
 
 /* ─── Toast notifications ─────────────────────────────────────────────────── */
 #toast-container {

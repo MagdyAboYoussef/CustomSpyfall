@@ -286,7 +286,11 @@ io.on('connection', (socket) => {
 
     if (result.allVoted) {
       const resolution = gameManager.resolveVotes(code);
-      io.to(code).emit('game-over', resolution);
+      if (resolution.awaitingSpyGuess) {
+        io.to(code).emit('spy-guess-prompt', { ...resolution, roomState: gameManager.getPublicRoomState(room) });
+      } else {
+        io.to(code).emit('game-over', { ...resolution, roomState: gameManager.getPublicRoomState(room) });
+      }
     }
 
     cb?.({ success: true });
@@ -300,7 +304,40 @@ io.on('connection', (socket) => {
     if (room.phase !== PHASES.VOTING) return cb?.({ success: false, error: 'Not in voting phase' });
 
     const resolution = gameManager.resolveVotes(code);
-    io.to(code).emit('game-over', resolution);
+    if (resolution.awaitingSpyGuess) {
+      io.to(code).emit('spy-guess-prompt', { ...resolution, roomState: gameManager.getPublicRoomState(room) });
+    } else {
+      io.to(code).emit('game-over', { ...resolution, roomState: gameManager.getPublicRoomState(room) });
+    }
+    cb?.({ success: true });
+  });
+
+  // Spy location guess
+  socket.on('spy-guess', ({ guessedLocation }, cb) => {
+    const code = socket.data.roomCode;
+    const result = gameManager.submitSpyGuess(code, socket.id, guessedLocation);
+    if (result.error) return cb?.({ success: false, error: result.error });
+
+    const room = gameManager.rooms.get(code);
+    io.to(code).emit('game-over', { ...result, roomState: gameManager.getPublicRoomState(room) });
+    cb?.({ success: true });
+  });
+
+  // Kick player (host only)
+  socket.on('kick-player', ({ targetId }, cb) => {
+    const code = socket.data.roomCode;
+    const result = gameManager.kickPlayer(code, socket.id, targetId);
+    if (result.error) return cb?.({ success: false, error: result.error });
+
+    const { kicked, room } = result;
+    // Tell the kicked socket to go home
+    const kickedSocket = io.sockets.sockets.get(targetId);
+    if (kickedSocket) kickedSocket.emit('you-were-kicked');
+
+    io.to(code).emit('player-kicked', {
+      name: kicked.name,
+      roomState: gameManager.getPublicRoomState(room)
+    });
     cb?.({ success: true });
   });
 

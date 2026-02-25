@@ -4,6 +4,7 @@ const PHASES = {
   LOBBY: 'LOBBY',
   PLAYING: 'PLAYING',
   VOTING: 'VOTING',
+  SPY_GUESS: 'SPY_GUESS',
   RESULTS: 'RESULTS'
 };
 
@@ -295,17 +296,25 @@ class GameManager {
     const mostVotedPlayer = room.players.find(p => p.id === mostVotedId);
     const spyCaught = room.currentRound.spies.includes(mostVotedId);
 
-    // Award points
     const spyIdSet = new Set(room.currentRound.spies);
-    room.players.forEach(p => {
-      if (!room.scores[p.name]) room.scores[p.name] = 0;
-      if (spyCaught && !spyIdSet.has(p.id)) room.scores[p.name] += 1;   // innocent wins
-      if (!spyCaught && spyIdSet.has(p.id)) room.scores[p.name] += 2;   // spy escapes
-    });
 
-    room.phase = PHASES.RESULTS;
+    if (spyCaught) {
+      // Agents win: 1 pt each
+      room.players.forEach(p => {
+        if (!room.scores[p.name]) room.scores[p.name] = 0;
+        if (!spyIdSet.has(p.id)) room.scores[p.name] += 1;
+      });
+      room.phase = PHASES.RESULTS;
+    } else {
+      // Spy survives: 1 pt for now — may earn 2 more by guessing the location
+      room.players.forEach(p => {
+        if (!room.scores[p.name]) room.scores[p.name] = 0;
+        if (spyIdSet.has(p.id)) room.scores[p.name] += 1;
+      });
+      room.phase = PHASES.SPY_GUESS;
+    }
 
-    return {
+    const base = {
       tally,
       mostVotedPlayer: mostVotedPlayer?.name,
       mostVotedId,
@@ -315,6 +324,73 @@ class GameManager {
       assignments: room.currentRound.assignments,
       players: room.players
     };
+
+    return spyCaught
+      ? { ...base, awaitingSpyGuess: false }
+      : { ...base, awaitingSpyGuess: true, locations: room.locations.map(l => l.Location) };
+  }
+
+  submitSpyGuess(code, socketId, guessedLocation) {
+    const room = this.rooms.get(code);
+    if (!room || room.phase !== PHASES.SPY_GUESS) return { error: 'Invalid state' };
+
+    const spyIdSet = new Set(room.currentRound.spies);
+    if (!spyIdSet.has(socketId)) return { error: 'Only the spy can guess' };
+
+    const correct = guessedLocation === room.currentRound.location;
+    if (correct) {
+      room.players.forEach(p => {
+        if (spyIdSet.has(p.id)) room.scores[p.name] = (room.scores[p.name] || 0) + 2;
+      });
+    }
+
+    room.phase = PHASES.RESULTS;
+
+    return {
+      spyCaught: false,
+      awaitingSpyGuess: false,
+      guessedLocation,
+      guessCorrect: correct,
+      spyNames: room.currentRound.spyNames,
+      location: room.currentRound.location,
+      assignments: room.currentRound.assignments,
+      players: room.players
+    };
+  }
+
+  kickPlayer(code, hostSocketId, targetId) {
+    const room = this.rooms.get(code);
+    if (!room) return { error: 'Room not found' };
+    if (room.hostSocketId !== hostSocketId) return { error: 'Only host can kick' };
+
+    const idx = room.players.findIndex(p => p.id === targetId);
+    if (idx === -1) return { error: 'Player not found' };
+    if (room.players[idx].isHost) return { error: 'Cannot kick the host' };
+
+    const kicked = room.players[idx];
+    room.players.splice(idx, 1);
+    delete room.scores[kicked.name];
+
+    // If mid-game, remove from question order and advance turn if needed
+    if (room.currentRound) {
+      const qo = room.currentRound.questionOrder;
+      const qIdx = qo.indexOf(targetId);
+      if (qIdx !== -1) {
+        const wasCurrent = qo[room.currentRound.currentQuestionerIndex] === targetId;
+        qo.splice(qIdx, 1);
+        if (room.currentRound.currentQuestionerIndex >= qo.length) {
+          room.currentRound.currentQuestionerIndex = 0;
+        } else if (wasCurrent) {
+          // stay at same index — now points to the next player after removal
+        }
+        // Clear vote if any
+        delete room.votes[targetId];
+        // Remove from assignments
+        room.currentRound.assignments = room.currentRound.assignments.filter(a => a.playerId !== targetId);
+      }
+    }
+
+    return { kicked, room };
   }
 
   addChat(code, socketId, message) {
