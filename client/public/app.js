@@ -638,7 +638,22 @@ function castVote(targetId) {
 
 function showError(type, msg) {
   console.warn(type, msg);
-  // Could add toast notification here
+  showToast(msg, 'error');
+}
+
+function showToast(msg, type = 'error', duration = 3000) {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  container.appendChild(el);
+
+  const remove = () => { el.classList.add('fade-out'); setTimeout(() => el.remove(), 300); };
+  const timer = setTimeout(remove, duration);
+  el.addEventListener('animationend', () => {}, { once: true });
+  // Allow early dismiss on click (pointer-events on via JS)
+  el.style.pointerEvents = 'auto';
+  el.addEventListener('click', () => { clearTimeout(timer); remove(); }, { once: true });
 }
 
 // ─── Utility ──────────────────────────────────────────────────────────────────
@@ -963,7 +978,7 @@ function setupListeners() {
   // Start game
   document.getElementById('btn-start-game').onclick = () => {
     state.socket.emit('start-game', {}, (res) => {
-      if (res?.error) alert(res.error);
+      if (res?.error) showToast(res.error, 'error');
     });
   };
 
