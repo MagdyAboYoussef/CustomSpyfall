@@ -33,7 +33,7 @@ const defaultLocations = loadDefaultLocations();
 app.post('/api/parse-csv', upload.single('csv'), (req, res) => {
   try {
     if (!req.file) return res.json({ locations: defaultLocations });
-    const content = req.file.buffer.toString('utf-8');
+    const content = req.file.buffer.toString('utf-8').replace(/^\uFEFF/, '');
     const records = parse(content, { columns: true, skip_empty_lines: true });
 
     // Validate: must have Location column
