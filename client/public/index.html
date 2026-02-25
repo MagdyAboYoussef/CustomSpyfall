@@ -127,7 +127,13 @@
           </div>
           <div id="csv-status" class="csv-status hidden"></div>
           <div id="csv-preview" class="hidden">
-            <div class="csv-preview-label">LOADED LOCATIONS</div>
+            <div class="csv-preview-header">
+              <div class="csv-preview-label">LOADED LOCATIONS</div>
+              <div class="picker-controls">
+                <button class="btn btn-ghost small" id="btn-toggle-all-csv">Deselect All</button>
+                <span id="csv-count" class="picker-count">0 selected</span>
+              </div>
+            </div>
             <div id="csv-preview-grid" class="picker-grid"></div>
           </div>
         </div>

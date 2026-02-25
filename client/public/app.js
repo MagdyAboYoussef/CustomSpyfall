@@ -122,7 +122,8 @@ const state = {
   timerSeconds: 480,
   timerRemaining: 0,
   timerTotal: 480,
-  loadedLocations: null,   // for CSV mode
+  loadedLocations: null,      // for CSV mode
+  selectedCsvLocNames: new Set(), // for CSV mode selection
   selectedLocNames: new Set(), // for picker mode
   locationSource: 'picker',    // 'picker' | 'csv'
   allBuiltinLocations: [],
@@ -732,23 +733,43 @@ function renderCsvPreview(locations) {
   if (!locations || locations.length === 0) { wrap.classList.add('hidden'); return; }
 
   grid.innerHTML = locations.map(loc => {
-    // Extract all RoleN fields in order (supports any number)
     const roles = Object.keys(loc)
       .filter(k => /^Role\d+$/i.test(k))
       .sort((a, b) => parseInt(a.replace(/\D/g, '')) - parseInt(b.replace(/\D/g, '')))
       .map(k => loc[k]).filter(Boolean);
     const rolesEncoded = esc(roles.join('||'));
+    const checked = state.selectedCsvLocNames.has(loc.Location);
     return `
-      <div class="csv-preview-item">
-        <div class="csv-preview-item-top">
-          <div class="csv-preview-item-name">${esc(loc.Location)}</div>
+      <label class="picker-item${checked ? ' checked' : ''}">
+        <input type="checkbox" ${checked ? 'checked' : ''} data-loc="${esc(loc.Location)}" style="display:none" />
+        <div class="picker-item-top">
+          <div class="picker-item-name">${esc(loc.Location)}</div>
           ${roles.length ? `<span class="picker-info-btn" data-loc="${esc(loc.Location)}" data-roles="${rolesEncoded}" title="View roles">ℹ</span>` : ''}
         </div>
-      </div>
+      </label>
     `;
   }).join('');
 
-  // Wire up info buttons on the CSV grid
+  // Toggle selection on card click
+  grid.querySelectorAll('.picker-item').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.picker-info-btn')) return;
+      const cb = card.querySelector('input[type="checkbox"]');
+      const locName = cb.dataset.loc;
+      if (state.selectedCsvLocNames.has(locName)) {
+        state.selectedCsvLocNames.delete(locName);
+        cb.checked = false;
+        card.classList.remove('checked');
+      } else {
+        state.selectedCsvLocNames.add(locName);
+        cb.checked = true;
+        card.classList.add('checked');
+      }
+      updateCsvCount();
+    });
+  });
+
+  // Wire up info buttons
   grid.querySelectorAll('.picker-info-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault(); e.stopPropagation();
@@ -756,7 +777,17 @@ function renderCsvPreview(locations) {
     });
   });
 
+  updateCsvCount();
   wrap.classList.remove('hidden');
+}
+
+function updateCsvCount() {
+  const n = state.selectedCsvLocNames.size;
+  const total = state.loadedLocations?.length || 0;
+  const countEl = document.getElementById('csv-count');
+  const toggleBtn = document.getElementById('btn-toggle-all-csv');
+  if (countEl) countEl.textContent = `${n} of ${total} selected`;
+  if (toggleBtn) toggleBtn.textContent = n >= total ? 'Deselect All' : 'Select All';
 }
 
 function showLocInfoModal(location, roles) {
@@ -785,8 +816,8 @@ function setPickerSelection(filter) {
 
 function getLocationsPayload() {
   if (state.locationSource === 'csv') {
-    // CSV mode: send full objects (server doesn't have them)
-    return { locations: state.loadedLocations, locationNames: null };
+    const selected = (state.loadedLocations || []).filter(l => state.selectedCsvLocNames.has(l.Location));
+    return { locations: selected, locationNames: null };
   }
   // Picker mode: send only names — server resolves to full objects
   const names = [...state.selectedLocNames];
@@ -838,6 +869,17 @@ function setupListeners() {
     toggleAllBtn.textContent = allSelected ? 'Select All' : 'Deselect All';
   };
 
+  // CSV select all / deselect all
+  document.getElementById('btn-toggle-all-csv').onclick = () => {
+    const total = state.loadedLocations?.length || 0;
+    if (state.selectedCsvLocNames.size >= total) {
+      state.selectedCsvLocNames.clear();
+    } else {
+      state.loadedLocations?.forEach(l => state.selectedCsvLocNames.add(l.Location));
+    }
+    renderCsvPreview(state.loadedLocations);
+  };
+
   // Number of spies buttons
   document.querySelectorAll('[data-spies]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -883,6 +925,7 @@ function setupListeners() {
         csvStatus.textContent = '✗ ' + data.error;
       } else {
         state.loadedLocations = data.locations;
+        state.selectedCsvLocNames = new Set(data.locations.map(l => l.Location));
         csvStatus.className = 'csv-status';
         csvStatus.textContent = `✓ Loaded ${data.count} locations`;
         renderCsvPreview(data.locations);
