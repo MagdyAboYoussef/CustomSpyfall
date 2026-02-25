@@ -1,0 +1,16 @@
+Location,Role1,Role2,Role3,Role4,Role5,Role6
+Beach,Lifeguard,Swimmer,Surfer,Vendor,Tourist,Photographer
+Hospital,Doctor,Nurse,Patient,Surgeon,Janitor,Receptionist
+Spaceship,Captain,Engineer,Navigator,Scientist,Mechanic,Cook
+Casino,Dealer,Security Guard,High Roller,Bartender,Cocktail Waitress,Pit Boss
+Police Station,Chief,Detective,Patrol Officer,Suspect,Lawyer,Dispatcher
+University,Professor,Student,Janitor,Dean,Librarian,Coach
+Supermarket,Cashier,Stock Clerk,Manager,Security,Customer,Butcher
+Airplane,Pilot,Co-Pilot,Flight Attendant,Passenger,Air Marshal,Mechanic
+Military Base,General,Soldier,Spy,Cook,Medic,Engineer
+Movie Studio,Director,Actor,Camera Operator,Makeup Artist,Producer,Extra
+Restaurant,Chef,Waiter,Sommelier,Host,Dishwasher,Food Critic
+Circus,Ringmaster,Clown,Acrobat,Lion Tamer,Magician,Ticket Seller
+Submarine,Captain,Navigator,Engineer,Cook,Medic,Torpedo Operator
+Space Station,Commander,Scientist,Pilot,Flight Engineer,Mission Specialist,Flight Director
+Bank,Manager,Teller,Security Guard,Loan Officer,Customer,Robber

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CustomSpyFall — Play Spyfall with Your Own Locations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,600;1,300&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+</head>
+<body>
+  <div id="scanline"></div>
+  <div id="noise"></div>
+  <button id="btn-sound-toggle" class="btn-sound-toggle" title="Toggle sound">🔊</button>
+
+  <!-- SCREENS -->
+  <div id="screen-home" class="screen active">
+    <div class="home-wrap">
+      <div class="logo-block">
+        <div class="logo-eye">👁</div>
+        <h1 class="logo-title">CUSTOMSPYFALL</h1>
+        <p class="logo-sub">SPYFALL WITH YOUR OWN LOCATIONS</p>
+      </div>
+      <div class="home-actions">
+        <div class="card" id="create-card">
+          <div class="card-label">HOST</div>
+          <h2>Create Room</h2>
+          <p>Use built-in locations or upload your own CSV. Set timer, invite friends, start the game.</p>
+          <button class="btn btn-primary" id="btn-show-create">Create Game →</button>
+        </div>
+        <div class="card-divider">OR</div>
+        <div class="card" id="join-card">
+          <div class="card-label">AGENT</div>
+          <h2>Join Room</h2>
+          <p>Enter a room code to connect to an active game session.</p>
+          <button class="btn btn-outline" id="btn-show-join">Join Game →</button>
+        </div>
+      </div>
+      <div class="home-footer">
+        <button class="btn-about" id="btn-about">? About &amp; How to Play</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREATE ROOM -->
+  <div id="screen-create" class="screen">
+    <div class="form-screen">
+      <button class="btn-back" id="btn-back-create">← BACK</button>
+      <h2 class="form-title">MISSION BRIEFING</h2>
+      <p class="form-sub">Configure your game session</p>
+
+      <div class="form-group">
+        <label>YOUR CODENAME</label>
+        <input type="text" id="create-name" placeholder="Agent name..." maxlength="20" />
+      </div>
+
+      <div class="form-group">
+        <label>ROUND TIMER</label>
+        <div class="timer-controls">
+          <button class="btn-timer" data-seconds="180">3 MIN</button>
+          <button class="btn-timer active" data-seconds="480">8 MIN</button>
+          <button class="btn-timer" data-seconds="600">10 MIN</button>
+          <button class="btn-timer" data-seconds="900">15 MIN</button>
+          <input type="number" id="custom-timer" placeholder="Custom (sec)" min="60" max="3600" />
+        </div>
+      </div>
+
+      <div class="form-row-two">
+        <div class="form-group">
+          <label>NUMBER OF SPIES</label>
+          <div class="timer-controls">
+            <button class="btn-timer active" data-spies="1">1</button>
+            <button class="btn-timer" data-spies="2">2</button>
+            <button class="btn-timer" data-spies="3">3</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>MAX PLAYERS</label>
+          <div class="timer-controls">
+            <button class="btn-timer" data-maxp="4">4</button>
+            <button class="btn-timer" data-maxp="6">6</button>
+            <button class="btn-timer active" data-maxp="8">8</button>
+            <button class="btn-timer" data-maxp="10">10</button>
+            <button class="btn-timer" data-maxp="12">12</button>
+            <button class="btn-timer" data-maxp="14">14</button>
+            <button class="btn-timer" data-maxp="16">16</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>LOCATION DOSSIER</label>
+        <div class="loc-source-tabs">
+          <button class="loc-tab active" data-tab="picker">PICK LOCATIONS</button>
+          <button class="loc-tab" data-tab="csv">UPLOAD CSV</button>
+        </div>
+
+        <!-- Location Picker Tab -->
+        <div id="tab-picker" class="loc-tab-content">
+          <div class="picker-toolbar">
+            <button class="btn btn-ghost small" id="btn-select-classic">Classic</button>
+            <button class="btn btn-ghost small" id="btn-select-spyfall2">Spyfall 2</button>
+            <button class="btn btn-ghost small" id="btn-toggle-all-loc">Select All</button>
+            <span id="picker-count" class="picker-count">0 selected</span>
+          </div>
+
+          <div class="picker-set-label">SPYFALL CLASSIC</div>
+          <div id="picker-classic" class="picker-grid"></div>
+
+          <div class="picker-set-label" style="margin-top:1rem">SPYFALL 2</div>
+          <div id="picker-spyfall2" class="picker-grid"></div>
+        </div>
+
+        <!-- CSV Upload Tab -->
+        <div id="tab-csv" class="loc-tab-content hidden">
+          <div class="file-drop" id="file-drop">
+            <div class="file-drop-inner">
+              <span class="file-icon">📁</span>
+              <span id="file-label">Drop CSV or click to browse</span>
+              <span class="file-format">Any column after Location is treated as a role</span>
+              <span class="file-format" style="color:var(--text-muted);margin-top:0.2rem">Example: Location, Spy, Thief, Guard, Tourist</span>
+            </div>
+            <input type="file" id="csv-input" accept=".csv" />
+          </div>
+          <div id="csv-status" class="csv-status hidden"></div>
+          <div id="csv-preview" class="hidden">
+            <div class="csv-preview-label">LOADED LOCATIONS</div>
+            <div id="csv-preview-grid" class="picker-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary full" id="btn-create-room">INITIATE ROOM</button>
+      <div id="create-error" class="error-msg hidden"></div>
+    </div>
+  </div>
+
+  <!-- JOIN ROOM -->
+  <div id="screen-join" class="screen">
+    <div class="form-screen">
+      <button class="btn-back" id="btn-back-join">← BACK</button>
+      <h2 class="form-title">INFILTRATE</h2>
+      <p class="form-sub">Enter your access credentials</p>
+
+      <div class="form-group">
+        <label>ROOM CODE</label>
+        <input type="text" id="join-code" placeholder="XXXXX" maxlength="5" class="code-input" />
+      </div>
+
+      <div class="form-group">
+        <label>YOUR CODENAME</label>
+        <input type="text" id="join-name" placeholder="Agent name..." maxlength="20" />
+      </div>
+
+      <div class="form-group checkbox-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="join-spectator" />
+          <span class="checkbox-custom"></span>
+          JOIN AS SPECTATOR
+        </label>
+      </div>
+
+      <button class="btn btn-primary full" id="btn-join-room">ENTER ROOM</button>
+      <div id="join-error" class="error-msg hidden"></div>
+    </div>
+  </div>
+
+  <!-- LOBBY -->
+  <div id="screen-lobby" class="screen">
+    <div class="game-layout">
+      <div class="game-main">
+        <div class="lobby-header">
+          <div class="room-code-display">
+            <span class="room-code-label">ROOM CODE</span>
+            <span class="room-code-value" id="lobby-code">-----</span>
+            <button class="btn-copy" id="btn-copy-code" title="Copy code">⧉</button>
+          </div>
+          <div class="lobby-header-right">
+            <div class="player-count-badge" id="player-count">0 agents</div>
+            <button class="btn-leave" id="btn-leave-lobby" title="Leave room">✕ LEAVE</button>
+          </div>
+        </div>
+
+        <div class="locations-preview">
+          <div class="section-label">LOADED LOCATIONS</div>
+          <div id="locations-list" class="location-tags"></div>
+        </div>
+
+        <div class="players-grid" id="lobby-players"></div>
+
+        <!-- Scoreboard -->
+        <div id="scoreboard-wrap" class="scoreboard-wrap hidden">
+          <div class="scoreboard-header">
+            <span class="section-label">SCOREBOARD</span>
+            <button class="btn btn-ghost small" id="btn-reset-scores">Reset</button>
+          </div>
+          <div id="scoreboard-list" class="scoreboard-list"></div>
+        </div>
+
+        <div class="lobby-controls" id="lobby-controls">
+          <div class="timer-display" id="lobby-timer-display"></div>
+          <div id="host-controls" class="hidden">
+            <div class="timer-adjust">
+              <label>TIMER</label>
+              <div class="timer-controls-small">
+                <button class="btn-timer-sm" data-sec="180">3m</button>
+                <button class="btn-timer-sm" data-sec="300">5m</button>
+                <button class="btn-timer-sm" data-sec="480">8m</button>
+                <button class="btn-timer-sm" data-sec="600">10m</button>
+                <button class="btn-timer-sm" data-sec="900">15m</button>
+              </div>
+            </div>
+            <button class="btn btn-primary" id="btn-start-game">START MISSION</button>
+          </div>
+          <div id="guest-waiting" class="hidden waiting-msg">Waiting for host to start...</div>
+        </div>
+      </div>
+      <div class="chat-panel" id="chat-panel">
+        <div class="chat-header">COMMS</div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-wrap">
+          <input type="text" id="chat-input" placeholder="Send message..." maxlength="300" />
+          <button id="btn-send-chat">↑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAYING -->
+  <div id="screen-playing" class="screen">
+    <div class="game-layout">
+      <div class="game-main">
+        <div class="playing-header">
+          <div class="timer-circle" id="timer-circle">
+            <svg viewBox="0 0 100 100">
+              <circle class="timer-bg" cx="50" cy="50" r="44" />
+              <circle class="timer-progress" id="timer-prog" cx="50" cy="50" r="44" />
+            </svg>
+            <div class="timer-text" id="timer-text">--:--</div>
+          </div>
+          <div class="role-card" id="role-card">
+            <div class="role-reveal-overlay" id="role-reveal-overlay">
+              <span class="role-reveal-icon">🔒</span>
+              <span class="role-reveal-text">TAP TO REVEAL</span>
+            </div>
+            <div class="role-card-inner" id="role-card-inner">
+              <div class="role-label" id="role-label">YOUR ROLE</div>
+              <div class="role-location" id="role-location">---</div>
+              <div class="role-name" id="role-name">---</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="turn-indicator" id="turn-indicator">
+          <div class="turn-arrow">▶</div>
+          <div class="turn-text" id="turn-text">Waiting...</div>
+        </div>
+
+        <div id="question-target-display" class="question-target hidden">
+          <span id="qt-asker"></span> is asking <span id="qt-target"></span>
+        </div>
+
+        <div class="players-action-grid" id="action-players"></div>
+
+        <div class="playing-controls">
+          <button class="btn btn-outline" id="btn-raise-hand">✋ Raise Hand</button>
+          <button class="btn btn-skip" id="btn-skip-turn">SKIP TURN</button>
+          <div id="host-vote-control" class="hidden">
+            <button class="btn btn-danger" id="btn-start-voting">START VOTE</button>
+          </div>
+          <button class="btn-leave" id="btn-leave-playing" title="Leave room">✕ LEAVE</button>
+        </div>
+
+        <div class="hands-raised" id="hands-raised"></div>
+      </div>
+      <div class="chat-panel" id="chat-panel-play">
+        <div class="chat-header">COMMS</div>
+        <div class="chat-messages" id="chat-messages-play"></div>
+        <div class="chat-input-wrap">
+          <input type="text" id="chat-input-play" placeholder="Send message..." maxlength="300" />
+          <button id="btn-send-chat-play">↑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VOTING -->
+  <div id="screen-voting" class="screen">
+    <div class="game-layout">
+      <div class="game-main">
+        <div class="voting-header">
+          <div class="voting-title">VOTE OUT THE SPY</div>
+          <div class="voting-sub" id="voting-sub">Select who you think is the spy</div>
+          <div class="vote-progress" id="vote-progress"></div>
+        </div>
+        <div class="voting-grid" id="voting-grid"></div>
+        <div id="host-force-results" class="hidden" style="text-align:center;margin-top:1rem">
+          <button class="btn btn-danger" id="btn-force-results">REVEAL RESULTS →</button>
+        </div>
+      </div>
+      <div class="chat-panel" id="chat-panel-vote">
+        <div class="chat-header">COMMS</div>
+        <div class="chat-messages" id="chat-messages-vote"></div>
+        <div class="chat-input-wrap">
+          <input type="text" id="chat-input-vote" placeholder="Send message..." maxlength="300" />
+          <button id="btn-send-chat-vote">↑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="screen-results" class="screen">
+    <div class="results-wrap">
+      <div class="result-verdict" id="result-verdict"></div>
+      <div class="spy-reveal" id="spy-reveal"></div>
+      <div class="result-location" id="result-location"></div>
+      <div class="assignments-reveal" id="assignments-reveal"></div>
+      <div id="result-scoreboard" class="result-scoreboard hidden"></div>
+      <div class="result-actions">
+        <div id="host-reset" class="hidden">
+          <button class="btn btn-primary" id="btn-reset-room">PLAY AGAIN</button>
+        </div>
+        <button class="btn btn-ghost" id="btn-leave-results">LEAVE ROOM</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- About Modal -->
+  <div id="about-modal" class="loc-info-modal hidden">
+    <div class="loc-info-backdrop" id="about-backdrop"></div>
+    <div class="loc-info-content about-content">
+      <div class="loc-info-header">
+        <div class="loc-info-name" style="font-size:1.4rem">CUSTOMSPYFALL</div>
+        <button class="loc-info-close" id="about-close">✕</button>
+      </div>
+      <div class="about-section">
+        <div class="loc-info-label">HOW TO PLAY</div>
+        <p class="about-text">One or more players are secretly assigned the role of <strong>Spy</strong> — they don't know the location. Everyone else knows exactly where they are and what role they play.</p>
+        <p class="about-text">Players take turns asking each other questions to sniff out the spy. The spy must answer convincingly without giving themselves away — while secretly trying to figure out the location before the vote.</p>
+        <p class="about-text">At any point the host can call a vote. If the majority correctly identifies the spy, the agents win. If the spy guesses the location correctly before being caught, the spy wins.</p>
+      </div>
+      <div class="about-section">
+        <div class="loc-info-label">CUSTOM LOCATIONS</div>
+        <p class="about-text">CustomSpyFall lets you bring your own locations via CSV upload. Any column after <strong>Location</strong> becomes a role — no special column names needed.</p>
+      </div>
+      <div class="about-section about-credit">
+        <div class="loc-info-label">ABOUT THIS PROJECT</div>
+        <p class="about-text">Built as a free, non-profit hobby project by <strong>Magdy Abo Youssef</strong> — made for playing with friends. No ads, no tracking, no accounts.</p>
+        <p class="about-text" style="color:var(--text-muted);font-size:0.7rem;margin-top:0.5rem">Inspired by Spyfall by Alexandr Ushan.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Location Info Modal -->
+  <div id="loc-info-modal" class="loc-info-modal hidden">
+    <div class="loc-info-backdrop" id="loc-info-backdrop"></div>
+    <div class="loc-info-content">
+      <div class="loc-info-header">
+        <div class="loc-info-name" id="loc-modal-name"></div>
+        <button class="loc-info-close" id="loc-info-close">✕</button>
+      </div>
+      <div class="loc-info-label">POSSIBLE ROLES</div>
+      <div class="loc-info-roles" id="loc-modal-roles"></div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
