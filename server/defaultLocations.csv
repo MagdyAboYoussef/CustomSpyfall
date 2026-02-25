@@ -1,16 +1,16 @@
-Location,Role1,Role2,Role3,Role4,Role5,Role6
-Beach,Lifeguard,Swimmer,Surfer,Vendor,Tourist,Photographer
-Hospital,Doctor,Nurse,Patient,Surgeon,Janitor,Receptionist
-Spaceship,Captain,Engineer,Navigator,Scientist,Mechanic,Cook
-Casino,Dealer,Security Guard,High Roller,Bartender,Cocktail Waitress,Pit Boss
-Police Station,Chief,Detective,Patrol Officer,Suspect,Lawyer,Dispatcher
-University,Professor,Student,Janitor,Dean,Librarian,Coach
-Supermarket,Cashier,Stock Clerk,Manager,Security,Customer,Butcher
-Airplane,Pilot,Co-Pilot,Flight Attendant,Passenger,Air Marshal,Mechanic
-Military Base,General,Soldier,Spy,Cook,Medic,Engineer
-Movie Studio,Director,Actor,Camera Operator,Makeup Artist,Producer,Extra
-Restaurant,Chef,Waiter,Sommelier,Host,Dishwasher,Food Critic
-Circus,Ringmaster,Clown,Acrobat,Lion Tamer,Magician,Ticket Seller
-Submarine,Captain,Navigator,Engineer,Cook,Medic,Torpedo Operator
-Space Station,Commander,Scientist,Pilot,Flight Engineer,Mission Specialist,Flight Director
-Bank,Manager,Teller,Security Guard,Loan Officer,Customer,Robber
+Location,Role1,Role2,Role3,Role4,Role5,Role6,Role7,Role8,Role9,Role10,Role11,Role12,Role13,Role14,Role15,Role16
+Beach,Lifeguard,Surfer,Sunbather,Ice Cream Vendor,Volleyball Player,Scuba Diver,Beach Photographer,Marine Biologist,Metal Detectorist,Beach Patrol Officer,Sunburned Tourist,Seagull Victim,Food Truck Owner,Sandcastle Architect,Parasailing Instructor,Jet Ski Operator
+Hospital,Doctor,Nurse,Surgeon,Patient,Anesthesiologist,Emergency Physician,Paramedic,Radiologist,Pharmacist,Physical Therapist,Lab Technician,Orderly,Hypochondriac,Confused New Intern,Worried Parent in Waiting Room,Patient Who Self-Diagnosed on Google
+Casino,Dealer,Pit Boss,High Roller,Cocktail Waitress,Security,Card Counter,Casino Manager,Croupier,Slot Technician,Surveillance Officer,Poker Champion,Cashier,Valet,Bartender,Compulsive Gambler on a Losing Streak,Person Who Came for the Free Drinks
+Police Station,Police Chief,Detective,Patrol Officer,Forensic Analyst,Dispatcher,Suspect,Homicide Inspector,SWAT Commander,Undercover Agent,Crime Scene Technician,K9 Handler,Desk Sergeant,Evidence Clerk,Internal Affairs,Person Reporting a Missing Cat,Guy Disputing a Parking Ticket
+University,Professor,Graduate Student,Undergraduate,Dean,Librarian,Janitor,Registrar,Campus Security,Research Assistant,Athletics Coach,Academic Advisor,Lab Technician,Campus Tour Guide,IT Support,Student Who's Never Attended a Lecture,Professor Who Never Replies to Emails
+Supermarket,Store Manager,Cashier,Stock Boy,Butcher,Bakery Worker,Security Guard,Deli Worker,Produce Manager,Pharmacy Technician,Customer Service Rep,Loss Prevention Officer,Night Stocker,Fishmonger,Cart Collector,Person Arguing About an Expired Coupon,Shopper Who Came for One Thing and Left with a Full Cart
+Airplane,Pilot,Co-Pilot,Flight Attendant,Passenger,Air Marshal,Mechanic,Baggage Handler,Boarding Agent,First Class Snob,Frequent Flyer,Nervous First-Timer,Middle Seat Victim,Crying Baby's Parent,Seat Recliner,Overhead Bin Hoarder,Immigration Officer
+Military Base,General,Drill Sergeant,Soldier,Intelligence Officer,Mechanic,Cook,Sniper,Medic,Bomb Disposal Expert,Tank Commander,Military Police,Combat Pilot,Special Forces Operative,Base Commander,New Recruit on Day One,Soldier Counting Down the Days to Discharge
+Movie Studio,Director,Lead Actor,Stunt Double,Cinematographer,Props Manager,Makeup Artist,Producer,Screenwriter,Sound Designer,Visual Effects Artist,Costume Designer,Casting Director,Gaffer,Script Supervisor,Film Editor,Actor Who Keeps Forgetting Lines
+Restaurant,Head Chef,Sous Chef,Waiter,Sommelier,Food Critic,Busboy,Pastry Chef,Host,Bartender,Manager,Line Cook,Dishwasher,Prep Cook,Mystery Diner,Table That's Been Waiting 45 Minutes,Person Who Sends Everything Back
+School,Principal,Teacher,Student,Gym Coach,School Nurse,Janitor,Vice Principal,Librarian,Counselor,Art Teacher,Security Guard,Teacher's Pet,Class Clown,Exchange Student,Substitute Teacher Who Has Lost Control,Parent Causing Drama at the PTA Meeting
+Night Club,DJ,Bouncer,Bartender,VIP Guest,Promoter,Coat Check Attendant,Club Owner,Cocktail Waitress,Lighting Director,Limo Driver,Paparazzi,Underage Crasher,Social Media Influencer,Floor Manager,Person Who Came Alone and Regrets It,Someone Regretting Their Choice of Shoes
+Wedding,Bride,Groom,Best Man,Maid of Honor,Wedding Planner,Officiant,Flower Girl,Ring Bearer,Catering Manager,Wedding Photographer,DJ,Florist,Drunk Uncle,Ex Who Was Accidentally Invited,Guest Who Only Came for the Open Bar,Crying Mother of the Bride
+Rock Concert,Lead Guitarist,Drummer,Tour Manager,Roadie,Groupie,Security Guard,Bass Player,Vocalist,Stage Manager,Lighting Tech,Sound Engineer,Merchandise Seller,Backstage Pass Holder,Music Journalist,Person Recording the Entire Concert on Their Phone,Guy Who's Too Tall Standing Right in Front
+Pirate Ship,Captain,First Mate,Navigator,Cannoneer,Cook,Prisoner,Boatswain,Lookout,Carpenter,Surgeon,Quartermaster,Deckhand,Gunner,Spy,Treasure Master,Cabin Boy
