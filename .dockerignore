@@ -1,0 +1,8 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+*.md
+start.bat
+start.sh
+start.ps1
