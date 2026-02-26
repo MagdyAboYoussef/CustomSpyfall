@@ -3,8 +3,22 @@
 A free, self-hosted multiplayer deduction game inspired by Spyfall — with full support for **custom locations via CSV upload**.
 
 One or more players are secretly the **Spy**. They don't know the location. Everyone else does. Through careful questioning, agents try to expose the spy before time runs out — while the spy tries to blend in and guess the location.
+<img width="1912" height="948" alt="image" src="https://github.com/user-attachments/assets/fa15c676-81f3-4f5a-a1ee-5d471523d35a" />
+<img width="1912" height="948" alt="image" src="https://github.com/user-attachments/assets/c8846f01-8e53-48a2-91e7-a787d7dd5b86" />
+<img width="1912" height="948" alt="image" src="https://github.com/user-attachments/assets/66b5f4e2-b795-4dd2-824f-e48a8942bc08" />
+<img width="1912" height="948" alt="image" src="https://github.com/user-attachments/assets/a4ed83fe-0a82-4270-934e-84bbc7e3c0c8" />
 
-> Built as a free, non-profit hobby project by **Magdy Abo Youssef** — made for playing with friends.
+> Built as a free, non-profit hobby project — made for playing with friends. I was not able to find a similar project online while looking up
+> I eventually plan to deploy this online but for now the ngrok setup was enough to get it up and running when needed, tried it with custom csv with friends on different categories in discord and was overall fun experience.
+> I added some default categorties (which are AI generated) but the entire idea of this is to allow your friend groups to host their own categories with the csv setup
+> Added some unique rules:
+   - If a hand is raised host can give questioning rights
+   - Host can also skip someone's turn
+   - A spy wins 1 point if he wins, but gets to guess location if he guessed right he earns 2 additional points
+   - if a spy is caught all the lobby wins 1 points
+   - if the voting is a draw the spy wins
+   - You can click on the location to view all available roles (not inside the game just in lobbies)
+   - If someone doesn't want to ask in his turn hes free to skip
 
 ---
 
