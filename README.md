@@ -11,7 +11,7 @@ One or more players are secretly the **Spy**. They don't know the location. Ever
 > Built as a free, non-profit hobby project — made for playing with friends. I was not able to find a similar project online while looking up
 > I eventually plan to deploy this online but for now the ngrok setup was enough to get it up and running when needed, tried it with custom csv with friends on different categories in discord and was overall fun experience.
 > I added some default categorties (which are AI generated) but the entire idea of this is to allow your friend groups to host their own categories with the csv setup
-> Added some unique rules:
+Added some unique rules:
    - If a hand is raised host can give questioning rights
    - Host can also skip someone's turn
    - A spy wins 1 point if he wins, but gets to guess location if he guessed right he earns 2 additional points
