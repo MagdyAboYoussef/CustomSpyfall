@@ -21,6 +21,9 @@ One or more players are secretly the **Spy**. They don't know the location. Ever
    - You can click on the location to view all available roles (not inside the game just in lobbies)
    - If someone doesn't want to ask in his turn hes free to skip
 
+**🌐 Play now:** https://customspyfall.fly.dev
+**📂 Source:** https://github.com/MagdyAboYoussef/CustomSpyfall
+
 ---
 
 ## Features

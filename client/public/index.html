@@ -208,18 +208,44 @@
 
         <div class="lobby-controls" id="lobby-controls">
           <div class="timer-display" id="lobby-timer-display"></div>
+          <div id="lobby-player-actions"></div>
           <div id="host-controls" class="hidden">
-            <div class="timer-adjust">
-              <label>TIMER</label>
-              <div class="timer-controls-small">
-                <button class="btn-timer-sm" data-sec="180">3m</button>
-                <button class="btn-timer-sm" data-sec="300">5m</button>
-                <button class="btn-timer-sm" data-sec="480">8m</button>
-                <button class="btn-timer-sm" data-sec="600">10m</button>
-                <button class="btn-timer-sm" data-sec="900">15m</button>
+            <div class="lobby-settings-grid">
+              <div class="timer-adjust">
+                <label>TIMER</label>
+                <div class="timer-controls-small">
+                  <button class="btn-timer-sm" data-sec="180">3m</button>
+                  <button class="btn-timer-sm" data-sec="300">5m</button>
+                  <button class="btn-timer-sm" data-sec="480">8m</button>
+                  <button class="btn-timer-sm" data-sec="600">10m</button>
+                  <button class="btn-timer-sm" data-sec="900">15m</button>
+                </div>
+              </div>
+              <div class="timer-adjust">
+                <label>SPIES</label>
+                <div class="timer-controls-small">
+                  <button class="btn-timer-sm" data-lobby-spies="1">1</button>
+                  <button class="btn-timer-sm" data-lobby-spies="2">2</button>
+                  <button class="btn-timer-sm" data-lobby-spies="3">3</button>
+                </div>
+              </div>
+              <div class="timer-adjust">
+                <label>MAX PLAYERS <span class="hint">(0 = no limit)</span></label>
+                <div class="timer-controls-small">
+                  <button class="btn-timer-sm" data-lobby-maxp="0">∞</button>
+                  <button class="btn-timer-sm" data-lobby-maxp="4">4</button>
+                  <button class="btn-timer-sm" data-lobby-maxp="6">6</button>
+                  <button class="btn-timer-sm" data-lobby-maxp="8">8</button>
+                  <button class="btn-timer-sm" data-lobby-maxp="10">10</button>
+                  <button class="btn-timer-sm" data-lobby-maxp="12">12</button>
+                  <button class="btn-timer-sm" data-lobby-maxp="16">16</button>
+                </div>
               </div>
             </div>
-            <button class="btn btn-primary" id="btn-start-game">START MISSION</button>
+            <div class="lobby-settings-actions">
+              <button class="btn btn-outline btn-sm" id="btn-save-settings">SAVE SETTINGS</button>
+              <button class="btn btn-primary" id="btn-start-game">START MISSION</button>
+            </div>
           </div>
           <div id="guest-waiting" class="hidden waiting-msg">Waiting for host to start...</div>
         </div>
@@ -275,6 +301,7 @@
           <button class="btn btn-outline" id="btn-raise-hand">✋ Raise Hand</button>
           <button class="btn btn-skip" id="btn-skip-turn">SKIP TURN</button>
           <div id="host-vote-control" class="hidden">
+            <button class="btn btn-outline btn-sm" id="btn-host-advance-turn">SKIP PLAYER TURN</button>
             <button class="btn btn-danger" id="btn-start-voting">START VOTE</button>
           </div>
           <button class="btn-leave" id="btn-leave-playing" title="Leave room">✕ LEAVE</button>
@@ -356,6 +383,9 @@
       <div class="about-section about-credit">
         <div class="loc-info-label">ABOUT THIS PROJECT</div>
         <p class="about-text">Built as a free, non-profit hobby project by <strong>Magdy Abo Youssef</strong> — made for playing with friends. No ads, no tracking, no accounts.</p>
+        <p class="about-text" style="margin-top:0.5rem">
+          <a href="https://github.com/MagdyAboYoussef/CustomSpyfall" target="_blank" rel="noopener" class="about-link">View source on GitHub →</a>
+        </p>
         <p class="about-text" style="color:var(--text-muted);font-size:0.7rem;margin-top:0.5rem">Inspired by Spyfall by Alexandr Ushan.</p>
       </div>
     </div>

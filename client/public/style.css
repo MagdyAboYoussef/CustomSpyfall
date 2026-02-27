@@ -522,11 +522,20 @@ input[type="text"]:focus, input[type="number"]:focus {
 .hands-raised {
   display: flex; flex-wrap: wrap; gap: 0.4rem;
 }
+.hand-entry {
+  display: flex; align-items: center; gap: 0.2rem;
+}
 .hand-chip {
   font-family: var(--font-mono); font-size: 0.65rem;
   padding: 0.2rem 0.6rem; border: 1px solid var(--text-muted);
   color: var(--text-dim);
 }
+.btn-grant-turn {
+  background: none; border: 1px solid var(--border);
+  color: var(--green); font-size: 0.6rem; padding: 0.1rem 0.4rem;
+  cursor: pointer; line-height: 1; transition: all 0.15s; font-family: var(--font-mono);
+}
+.btn-grant-turn:hover { border-color: var(--green); background: rgba(0,232,122,0.1); }
 
 /* ─── Voting ──────────────────────────────────────────────────────────────── */
 .voting-header { text-align: center; padding: 0.5rem 0 1rem; }
@@ -559,6 +568,11 @@ input[type="text"]:focus, input[type="number"]:focus {
 .vote-card.self { cursor: default; opacity: 0.5; border-style: dashed; }
 .vote-card.voted:not(.voted-for) { cursor: default; }
 .vote-card-name { font-family: var(--font-display); font-size: 1.5rem; letter-spacing: 0.05em; }
+.voted-status {
+  font-family: var(--font-mono); font-size: 0.55rem; letter-spacing: 0.1em;
+  margin-top: 0.3rem; color: var(--green);
+}
+.voted-status.pending { color: var(--text-muted); }
 
 /* ─── Results ─────────────────────────────────────────────────────────────── */
 .results-wrap {
@@ -711,6 +725,8 @@ input[type="text"]:focus, input[type="number"]:focus {
 }
 .about-text strong { color: var(--text); }
 .about-credit { border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 0.25rem; }
+.about-link { color: var(--red); text-decoration: none; font-family: var(--font-mono); font-size: 0.78rem; }
+.about-link:hover { text-decoration: underline; }
 
 /* ─── Sound Toggle ────────────────────────────────────────────────────────── */
 .btn-sound-toggle {
@@ -855,13 +871,32 @@ input[type="text"]:focus, input[type="number"]:focus {
   line-height: 1.4;
 }
 
+/* ─── Lobby settings grid ────────────────────────────────────────────────── */
+.lobby-settings-grid {
+  display: flex; flex-direction: column; gap: 0.85rem; margin-bottom: 1rem;
+}
+.lobby-settings-actions {
+  display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+#lobby-player-actions {
+  margin-bottom: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;
+}
+.btn-sm {
+  font-size: 0.7rem !important; padding: 0.5rem 1rem !important;
+}
+#host-vote-control {
+  display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;
+}
+
 /* ─── Kick button ─────────────────────────────────────────────────────────── */
 .btn-kick {
-  margin-left: auto; background: none; border: 1px solid var(--red-dim);
-  color: var(--red); border-radius: 3px; padding: 0.1rem 0.4rem;
-  font-size: 0.65rem; cursor: pointer; line-height: 1; flex-shrink: 0;
+  position: absolute; bottom: 0.35rem; right: 0.35rem;
+  background: none; border: none;
+  color: var(--red-dim); font-size: 0.75rem;
+  cursor: pointer; line-height: 1; padding: 0.1rem; transition: color 0.15s;
 }
-.btn-kick:hover { background: rgba(232,0,28,0.15); border-color: var(--red); }
+.btn-kick:hover { color: var(--red); }
 
 /* ─── Spy guess modal ─────────────────────────────────────────────────────── */
 .spy-guess-content {
