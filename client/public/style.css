@@ -396,10 +396,10 @@ input[type="text"]:focus, input[type="number"]:focus {
 .location-tag-name { cursor: pointer; }
 .loc-toggle-btn {
   background: none; border: none; cursor: pointer; padding: 0 0 0 0.35rem;
-  font-size: 0.8rem; line-height: 1; color: #4da6ff; transition: color 0.15s;
+  font-size: 0.8rem; line-height: 1; color: var(--red); transition: color 0.15s;
   vertical-align: middle; font-family: var(--font-mono);
 }
-.loc-toggle-btn:hover { color: #80c4ff; }
+.loc-toggle-btn:hover { color: var(--red-dim); }
 
 .players-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.75rem;
@@ -1212,6 +1212,14 @@ input[type="text"]:focus, input[type="number"]:focus {
 .rh-earn-chip .earn-pts { color: var(--green); font-weight: 600; }
 .rh-earn-chip .earn-pts.zero { color: var(--text-muted); }
 @media (max-width: 640px) { .notebook-panel { right: 0; } }
+
+/* ─── Mobile safe-area (notch / navigation bar) ─────────────────────────── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .screen { padding-top: env(safe-area-inset-top, 0px); }
+  .game-main { padding-bottom: max(1.5rem, env(safe-area-inset-bottom)); }
+  .results-wrap { padding-bottom: max(2rem, env(safe-area-inset-bottom)); }
+  .form-screen { padding-bottom: max(2rem, env(safe-area-inset-bottom)); }
+}
 
 /* ─── Mobile (≤480px) ────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
