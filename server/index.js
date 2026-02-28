@@ -212,6 +212,15 @@ io.on('connection', (socket) => {
       ...result,
       roomState: gameManager.getPublicRoomState(room)
     });
+    if (room.pendingVote && room.handRaises.size === 0) {
+      room.pendingVote = false;
+      gameManager.startVoting(code, room.hostSocketId);
+      io.to(code).emit('voting-started', {
+        roomState: gameManager.getPublicRoomState(room),
+        reason: 'All hands resolved — vote begins!'
+      });
+      startVoteTimer(code);
+    }
     cb?.({ success: true });
   });
 
@@ -288,15 +297,7 @@ io.on('connection', (socket) => {
       granted: true,
       roomState: gameManager.getPublicRoomState(room)
     });
-    if (room.pendingVote && room.handRaises.size === 0) {
-      room.pendingVote = false;
-      gameManager.startVoting(code, room.hostSocketId);
-      io.to(code).emit('voting-started', {
-        roomState: gameManager.getPublicRoomState(room),
-        reason: 'All hands resolved — vote begins!'
-      });
-      startVoteTimer(code);
-    }
+    // Do NOT auto-start voting here — the granted player still needs to end their turn
     cb?.({ success: true });
   });
 
@@ -440,6 +441,15 @@ io.on('connection', (socket) => {
     if (result.error) return cb?.({ success: false, error: result.error });
 
     io.to(code).emit('turn-advanced', { ...result, roomState: gameManager.getPublicRoomState(room) });
+    if (room.pendingVote && room.handRaises.size === 0) {
+      room.pendingVote = false;
+      gameManager.startVoting(code, room.hostSocketId);
+      io.to(code).emit('voting-started', {
+        roomState: gameManager.getPublicRoomState(room),
+        reason: 'All hands resolved — vote begins!'
+      });
+      startVoteTimer(code);
+    }
     cb?.({ success: true });
   });
 
