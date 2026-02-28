@@ -131,6 +131,9 @@ const state = {
   maxPlayers: 8,
   hasRaisedHand: false,
   isHost: false,
+  pendingTimerSec: null,
+  pendingNumSpies: null,
+  pendingMaxPlayers: null,
 };
 
 // ─── Socket ───────────────────────────────────────────────────────────────────
@@ -163,6 +166,7 @@ function connectSocket() {
   socket.on('player-disconnected', ({ roomState }) => updateRoomState(roomState));
   socket.on('player-reconnected', ({ roomState }) => { updateRoomState(roomState); SFX.join(); });
   socket.on('timer-updated', ({ roomState }) => updateRoomState(roomState));
+  socket.on('room-settings-updated', ({ roomState }) => updateRoomState(roomState));
 
   socket.on('game-started', ({ roomState }) => {
     state.roomState = roomState;
@@ -192,10 +196,13 @@ function connectSocket() {
     renderTurnState();
   });
 
-  socket.on('turn-advanced', ({ nextQuestionerName, roomState }) => {
+  socket.on('turn-advanced', ({ nextQuestionerName, roomState, granted }) => {
     updateRoomState(roomState);
     if (nextQuestionerName === state.myName) SFX.yourTurn();
     renderTurnState();
+    if (granted && nextQuestionerName) {
+      addSystemChat('play', `Host gave ${nextQuestionerName} the questioning turn`);
+    }
   });
 
   socket.on('hand-raised', ({ playerName, roomState }) => {
@@ -277,6 +284,9 @@ function connectSocket() {
     state.privateInfo = null;
     state.hasVoted = false;
     state.hasRaisedHand = false;
+    state.pendingTimerSec = null;
+    state.pendingNumSpies = null;
+    state.pendingMaxPlayers = null;
     showScreen('lobby');
     renderLobby();
   });
@@ -344,10 +354,11 @@ function renderLobby() {
   const grid = document.getElementById('lobby-players');
   grid.innerHTML = rs.players.map(p => `
     <div class="player-tile ${p.isHost ? 'host' : ''} ${!p.connected ? 'disconnected' : ''}">
-      <div class="player-tile-dot"></div>
+      ${state.isHost && !p.isHost
+        ? `<button class="btn-kick" data-id="${esc(p.id)}" title="Remove player">✕</button>`
+        : `<div class="player-tile-dot"></div>`}
       <div class="player-tile-name">${esc(p.name)}</div>
       <div class="player-tile-badge">${p.isHost ? 'HOST' : 'AGENT'}</div>
-      ${state.isHost && !p.isHost && !p.connected ? `<button class="btn-kick" data-id="${esc(p.id)}" title="Kick player">✕</button>` : ''}
     </div>
   `).join('') + rs.spectators.map(s => `
     <div class="player-tile">
@@ -365,8 +376,10 @@ function renderLobby() {
     });
   });
 
-  // Timer display
-  document.getElementById('lobby-timer-display').textContent = `Timer: ${formatTime(rs.timerSeconds)}`;
+  // Settings summary (shown to all)
+  const maxLabel = rs.maxPlayers === 0 ? '∞' : rs.maxPlayers;
+  document.getElementById('lobby-timer-display').textContent =
+    `Timer: ${formatTime(rs.timerSeconds)} · Max: ${maxLabel} · Spies: ${rs.numSpies}`;
 
   // Scoreboard
   const scoreWrap = document.getElementById('scoreboard-wrap');
@@ -391,13 +404,45 @@ function renderLobby() {
   if (state.isHost) {
     document.getElementById('host-controls').classList.remove('hidden');
     document.getElementById('guest-waiting').classList.add('hidden');
-    // Highlight active timer btn
-    document.querySelectorAll('.btn-timer-sm').forEach(b => {
-      b.classList.toggle('active', parseInt(b.dataset.sec) === rs.timerSeconds);
-    });
+
+    // Initialize pending settings from server state when null
+    if (state.pendingTimerSec === null) state.pendingTimerSec = rs.timerSeconds;
+    if (state.pendingNumSpies === null) state.pendingNumSpies = rs.numSpies;
+    if (state.pendingMaxPlayers === null) state.pendingMaxPlayers = rs.maxPlayers;
+
+    // Highlight active buttons for all three setting groups
+    document.querySelectorAll('[data-sec]').forEach(b =>
+      b.classList.toggle('active', parseInt(b.dataset.sec) === state.pendingTimerSec));
+    document.querySelectorAll('[data-lobby-spies]').forEach(b =>
+      b.classList.toggle('active', parseInt(b.dataset.lobbySpies) === state.pendingNumSpies));
+    document.querySelectorAll('[data-lobby-maxp]').forEach(b =>
+      b.classList.toggle('active', parseInt(b.dataset.lobbyMaxp) === state.pendingMaxPlayers));
   } else {
     document.getElementById('host-controls').classList.add('hidden');
     document.getElementById('guest-waiting').classList.remove('hidden');
+  }
+
+  // Spectator/Player swap buttons
+  const actionsDiv = document.getElementById('lobby-player-actions');
+  const amISpectator = rs.spectators.some(s => s.id === state.myId);
+  const amIPlayer = rs.players.some(p => p.id === state.myId && !p.isHost);
+  actionsDiv.innerHTML = '';
+  if (amISpectator) {
+    actionsDiv.innerHTML = `<button class="btn btn-outline btn-sm" id="btn-become-player">→ JOIN AS PLAYER</button>`;
+    document.getElementById('btn-become-player').addEventListener('click', () => {
+      state.socket.emit('become-player', {}, (res) => {
+        if (res?.error) showToast(res.error, 'error');
+        else state.isSpectator = false;
+      });
+    });
+  } else if (amIPlayer) {
+    actionsDiv.innerHTML = `<button class="btn btn-ghost btn-sm" id="btn-become-spectator">Watch as Spectator</button>`;
+    document.getElementById('btn-become-spectator').addEventListener('click', () => {
+      state.socket.emit('become-spectator', {}, (res) => {
+        if (res?.error) showToast(res.error, 'error');
+        else { state.isSpectator = true; state.isHost = false; }
+      });
+    });
   }
 }
 
@@ -414,6 +459,9 @@ function renderPlayingScreen() {
   const isCurrent = rs.currentQuestioner === state.myName;
   document.getElementById('btn-skip-turn').classList.toggle('hidden', !isCurrent);
   document.getElementById('host-vote-control').classList.toggle('hidden', !state.isHost);
+  // Host can skip the current player's turn on their behalf
+  document.getElementById('btn-host-advance-turn').classList.toggle('hidden',
+    !state.isHost || isCurrent); // hide when it's the host's own turn (they use Skip Turn)
 }
 
 function renderRoleCard() {
@@ -446,6 +494,9 @@ function leaveRoom() {
   state.hasVoted = false;
   state.hasRaisedHand = false;
   state.isHost = false;
+  state.pendingTimerSec = null;
+  state.pendingNumSpies = null;
+  state.pendingMaxPlayers = null;
   showScreen('home');
 }
 
@@ -520,7 +571,20 @@ function renderHandRaises() {
     return;
   }
   el.innerHTML = `<div class="section-label" style="width:100%;margin-bottom:0">HANDS UP:</div>` +
-    rs.handRaises.map(n => `<span class="hand-chip">✋ ${esc(n)}</span>`).join('');
+    rs.handRaises.map(h => {
+      const name = typeof h === 'string' ? h : h.name;
+      const id = typeof h === 'object' ? h.id : null;
+      const grantBtn = (state.isHost && id)
+        ? `<button class="btn-grant-turn" data-id="${esc(id)}" title="Give questioning turn">▶</button>`
+        : '';
+      return `<div class="hand-entry"><span class="hand-chip">✋ ${esc(name)}</span>${grantBtn}</div>`;
+    }).join('');
+
+  el.querySelectorAll('.btn-grant-turn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.socket.emit('grant-turn', { targetId: btn.dataset.id });
+    });
+  });
 }
 
 function renderTimer() {
@@ -551,15 +615,18 @@ function renderTimer() {
 function renderVotingScreen() {
   const rs = state.roomState;
   const grid = document.getElementById('voting-grid');
+  const votedIds = new Set(rs.votes?.votedIds || []);
 
   grid.innerHTML = rs.players.map(p => {
     const isMe = p.id === state.myId;
+    const hasVoted = votedIds.has(p.id);
     return `
       <div class="vote-card ${isMe ? 'self' : ''} ${state.hasVoted ? 'voted' : ''}"
            ${!isMe && !state.hasVoted ? `onclick="castVote('${p.id}')"` : ''}
            data-id="${p.id}">
         <div class="vote-card-name">${esc(p.name)}</div>
-        ${isMe ? '<div style="font-size:0.6rem;font-family:var(--font-mono);color:var(--text-muted)">CANNOT VOTE YOURSELF</div>' : ''}
+        <div class="voted-status ${hasVoted ? '' : 'pending'}">${hasVoted ? '✓ VOTED' : '...'}</div>
+        ${isMe ? '<div style="font-size:0.6rem;font-family:var(--font-mono);color:var(--text-muted);margin-top:0.2rem">CANNOT VOTE YOURSELF</div>' : ''}
       </div>
     `;
   }).join('');
@@ -722,16 +789,25 @@ async function loadBuiltinLocations() {
   const data = await res.json();
   state.allBuiltinLocations = data.locations;
 
-  // Default: select all classic locations
-  data.locations.filter(l => l.set === 'classic').forEach(l => state.selectedLocNames.add(l.Location));
+  // Default: select all spyfall locations (classic + spyfall2)
+  data.locations.filter(l => l.set === 'classic' || l.set === 'spyfall2').forEach(l => state.selectedLocNames.add(l.Location));
 
-  renderPickerGrid('classic', document.getElementById('picker-classic'));
-  renderPickerGrid('spyfall2', document.getElementById('picker-spyfall2'));
+  renderAllPickerGrids();
   updatePickerCount();
 }
 
-function renderPickerGrid(set, container) {
-  const locs = state.allBuiltinLocations.filter(l => l.set === set);
+function renderAllPickerGrids() {
+  renderPickerGrid(['classic', 'spyfall2'], document.getElementById('picker-spyfall'));
+  renderPickerGrid('anime',        document.getElementById('picker-anime'));
+  renderPickerGrid('lol',          document.getElementById('picker-lol'));
+  renderPickerGrid('movies',       document.getElementById('picker-movies'));
+  renderPickerGrid('games',        document.getElementById('picker-games'));
+  renderPickerGrid('programming',  document.getElementById('picker-programming'));
+}
+
+function renderPickerGrid(sets, container) {
+  const setArray = Array.isArray(sets) ? sets : [sets];
+  const locs = state.allBuiltinLocations.filter(l => setArray.includes(l.set));
   container.innerHTML = locs.map(loc => {
     const checked = state.selectedLocNames.has(loc.Location);
     const roles = Array.from({length: 16}, (_, i) => loc[`Role${i+1}`]).filter(Boolean);
@@ -852,8 +928,7 @@ function updatePickerCount() {
 function setPickerSelection(filter) {
   state.selectedLocNames.clear();
   state.allBuiltinLocations.filter(filter).forEach(l => state.selectedLocNames.add(l.Location));
-  renderPickerGrid('classic', document.getElementById('picker-classic'));
-  renderPickerGrid('spyfall2', document.getElementById('picker-spyfall2'));
+  renderAllPickerGrids();
   updatePickerCount();
 }
 
@@ -902,9 +977,13 @@ function setupListeners() {
     });
   });
 
-  // Picker quick-select buttons
-  document.getElementById('btn-select-classic').onclick = () => setPickerSelection(l => l.set === 'classic');
-  document.getElementById('btn-select-spyfall2').onclick = () => setPickerSelection(l => l.set === 'spyfall2');
+  // Picker quick-select buttons (per category)
+  document.getElementById('btn-select-spyfall').onclick    = () => setPickerSelection(l => l.set === 'classic' || l.set === 'spyfall2');
+  document.getElementById('btn-select-anime').onclick      = () => setPickerSelection(l => l.set === 'anime');
+  document.getElementById('btn-select-lol').onclick        = () => setPickerSelection(l => l.set === 'lol');
+  document.getElementById('btn-select-movies').onclick     = () => setPickerSelection(l => l.set === 'movies');
+  document.getElementById('btn-select-games').onclick      = () => setPickerSelection(l => l.set === 'games');
+  document.getElementById('btn-select-programming').onclick = () => setPickerSelection(l => l.set === 'programming');
   const toggleAllBtn = document.getElementById('btn-toggle-all-loc');
   toggleAllBtn.onclick = () => {
     const allSelected = state.allBuiltinLocations.every(l => state.selectedLocNames.has(l.Location));
@@ -1036,6 +1115,7 @@ function setupListeners() {
       state.roomState = res.roomState;
       state.isSpectator = asSpectator;
       state.isHost = false;
+      if (res.privateInfo) state.privateInfo = res.privateInfo;
       sessionStorage.setItem('spycraft-session', JSON.stringify({ code, name }));
       navigateToPhase(res.roomState.phase);
     });
@@ -1053,11 +1133,33 @@ function setupListeners() {
     });
   };
 
-  // Lobby timer buttons
-  document.querySelectorAll('.btn-timer-sm').forEach(btn => {
+  // Lobby settings buttons — track pending state only, save on SAVE SETTINGS
+  document.querySelectorAll('[data-sec]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const sec = parseInt(btn.dataset.sec);
-      state.socket.emit('update-timer', { timerSeconds: sec });
+      state.pendingTimerSec = parseInt(btn.dataset.sec);
+      document.querySelectorAll('[data-sec]').forEach(b => b.classList.toggle('active', b === btn));
+    });
+  });
+  document.querySelectorAll('[data-lobby-spies]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.pendingNumSpies = parseInt(btn.dataset.lobbySpies);
+      document.querySelectorAll('[data-lobby-spies]').forEach(b => b.classList.toggle('active', b === btn));
+    });
+  });
+  document.querySelectorAll('[data-lobby-maxp]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.pendingMaxPlayers = parseInt(btn.dataset.lobbyMaxp);
+      document.querySelectorAll('[data-lobby-maxp]').forEach(b => b.classList.toggle('active', b === btn));
+    });
+  });
+  document.getElementById('btn-save-settings').addEventListener('click', () => {
+    state.socket.emit('update-room-settings', {
+      timerSeconds: state.pendingTimerSec,
+      numSpies: state.pendingNumSpies,
+      maxPlayers: state.pendingMaxPlayers,
+    }, (res) => {
+      if (res?.error) showToast(res.error, 'error');
+      else showToast('Settings saved', 'info', 1500);
     });
   });
 
@@ -1097,6 +1199,13 @@ function setupListeners() {
   // Skip turn
   document.getElementById('btn-skip-turn').onclick = () => {
     state.socket.emit('skip-turn');
+  };
+
+  // Host advance turn (skip current player's turn)
+  document.getElementById('btn-host-advance-turn').onclick = () => {
+    state.socket.emit('host-advance-turn', {}, (res) => {
+      if (res?.error) showToast(res.error, 'error');
+    });
   };
 
   // Start voting

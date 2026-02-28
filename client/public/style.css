@@ -839,9 +839,13 @@ input[type="text"]:focus, input[type="number"]:focus {
   margin-left: auto;
 }
 
+.picker-set-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
 .picker-set-label {
   font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.15em;
-  color: var(--text-muted); margin-bottom: 0.4rem;
+  color: var(--text-muted);
 }
 
 .picker-grid {
