@@ -1983,6 +1983,7 @@ document.addEventListener('DOMContentLoaded', () => {
   connectSocket();
   setupListeners();
   loadBuiltinLocations();
+  showScreen('home');
   // Prefill join form from last visited room
   try {
     const last = JSON.parse(localStorage.getItem('spycraft-last') || '{}');
