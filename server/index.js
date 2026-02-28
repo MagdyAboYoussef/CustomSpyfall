@@ -493,13 +493,30 @@ io.on('connection', (socket) => {
     cb?.({ success: true });
   });
 
+  // Toggle location enabled/disabled — lobby only, host only
+  socket.on('toggle-location', ({ locationName }, cb) => {
+    const code = socket.data.roomCode;
+    const room = gameManager.rooms.get(code);
+    if (!room || room.hostSocketId !== socket.id) return cb?.({ success: false, error: 'Not host' });
+    if (room.phase !== PHASES.LOBBY) return cb?.({ success: false, error: 'Game in progress' });
+    if (room.disabledLocations.has(locationName)) {
+      room.disabledLocations.delete(locationName);
+    } else {
+      const enabledCount = room.locations.length - room.disabledLocations.size;
+      if (enabledCount <= 1) return cb?.({ success: false, error: 'Must keep at least 1 location enabled' });
+      room.disabledLocations.add(locationName);
+    }
+    io.to(code).emit('room-settings-updated', { roomState: gameManager.getPublicRoomState(room) });
+    cb?.({ success: true });
+  });
+
   // Ready to vote
   socket.on('ready-to-vote', (_, cb) => {
     const code = socket.data.roomCode;
     const result = gameManager.markReadyToVote(code, socket.id);
     if (result.error) return cb?.({ success: false, error: result.error });
 
-    if (result.autoStart) {
+    if (result.autoStart && !result.room.pendingVote) {
       const room = result.room;
       gameManager.startVoting(code, room.hostSocketId);
       stopTimer(code);

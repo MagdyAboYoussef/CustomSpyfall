@@ -57,6 +57,7 @@ class GameManager {
       handRaises: new Set(),
       readyToVote: new Set(),
       pendingVote: false,
+      disabledLocations: new Set(),
       scores: {},
       createdAt: Date.now()
     };
@@ -162,8 +163,10 @@ class GameManager {
     if (room.players.length < 3) return { error: 'Need at least 3 players' };
     if (room.locations.length === 0) return { error: 'No locations loaded' };
 
-    // Pick a random location
-    const location = room.locations[Math.floor(Math.random() * room.locations.length)];
+    // Pick a random enabled location
+    const enabled = room.locations.filter(l => !room.disabledLocations.has(l.Location));
+    if (enabled.length === 0) return { error: 'All locations are disabled — enable at least one' };
+    const location = enabled[Math.floor(Math.random() * enabled.length)];
     const roles = Array.from({length: 16}, (_, i) => location[`Role${i+1}`]).filter(Boolean);
 
     // Shuffle players
@@ -592,6 +595,7 @@ class GameManager {
         : null,
       readyToVote: room.phase === PHASES.PLAYING ? Array.from(room.readyToVote) : [],
       locations: room.locations.map(l => l.Location),
+      disabledLocations: Array.from(room.disabledLocations),
       numSpies: room.numSpies,
       maxPlayers: room.maxPlayers,
       scores: Object.entries(room.scores || {})

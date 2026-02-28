@@ -346,6 +346,8 @@ const state = {
   pendingNumSpies: null,
   pendingMaxPlayers: null,
   notebook: new Set(),
+  notebookPlayers: new Set(),
+  notebookTab: 'locations',
   hintState: null,
 };
 
@@ -384,7 +386,11 @@ function connectSocket() {
   socket.on('game-started', ({ roomState }) => {
     state.roomState = roomState;
     state.hasRaisedHand = false;
+    state.notebookPlayers = new Set();
     state.notebook = new Set();
+    state.notebookTab = 'locations';
+    const raiseBtn = document.getElementById('btn-raise-hand');
+    if (raiseBtn) { raiseBtn.textContent = '✋ Raise Hand'; raiseBtn.classList.remove('active'); }
     initHints();
     document.getElementById('notebook-panel')?.classList.remove('open');
     document.getElementById('btn-notebook')?.classList.remove('btn-notebook-active');
@@ -553,6 +559,8 @@ function connectSocket() {
     state.privateInfo = null;
     state.hasVoted = false;
     state.hasRaisedHand = false;
+    const raiseBtn = document.getElementById('btn-raise-hand');
+    if (raiseBtn) { raiseBtn.textContent = '✋ Raise Hand'; raiseBtn.classList.remove('active'); }
     state.pendingTimerSec = null;
     state.pendingNumSpies = null;
     state.pendingMaxPlayers = null;
@@ -602,20 +610,38 @@ function renderLobby() {
   document.getElementById('player-count').textContent =
     `${rs.players.filter(p=>p.connected).length} agent${rs.players.length !== 1 ? 's' : ''}${rs.spectators.length ? ` · ${rs.spectators.length} watching` : ''}`;
 
-  // Locations — clickable tags that open the roles modal
+  // Locations — clickable tags; host can toggle enable/disable
   const locList = document.getElementById('locations-list');
+  const disabled = new Set(rs.disabledLocations || []);
   locList.innerHTML = rs.locations.map(l => {
     const src = state.allBuiltinLocations.find(b => b.Location === l)
              || state.loadedLocations?.find(c => c.Location === l);
     const roles = src ? Array.from({length: 16}, (_, i) => src[`Role${i+1}`]).filter(Boolean) : [];
     const rolesEncoded = roles.length ? esc(roles.join('||')) : '';
+    const isDisabled = disabled.has(l);
+    const disabledClass = isDisabled ? ' loc-disabled' : '';
+    if (state.isHost) {
+      const toggleBtn = `<button class="loc-toggle-btn" data-loc="${esc(l)}" title="${isDisabled ? 'Enable' : 'Disable'}">${isDisabled ? '+' : '×'}</button>`;
+      return rolesEncoded
+        ? `<span class="location-tag${disabledClass}"><span class="location-tag-name location-tag-clickable" data-loc="${esc(l)}" data-roles="${rolesEncoded}">${esc(l)}</span>${toggleBtn}</span>`
+        : `<span class="location-tag${disabledClass}"><span class="location-tag-name">${esc(l)}</span>${toggleBtn}</span>`;
+    }
     return rolesEncoded
-      ? `<span class="location-tag location-tag-clickable" data-loc="${esc(l)}" data-roles="${rolesEncoded}">${esc(l)}</span>`
-      : `<span class="location-tag">${esc(l)}</span>`;
+      ? `<span class="location-tag location-tag-clickable${disabledClass}" data-loc="${esc(l)}" data-roles="${rolesEncoded}">${esc(l)}</span>`
+      : `<span class="location-tag${disabledClass}">${esc(l)}</span>`;
   }).join('');
 
-  // Delegate click for lobby location tags
+  // Delegate clicks for lobby location tags
   locList.onclick = (e) => {
+    // Toggle button (host only)
+    const toggleBtn = e.target.closest('.loc-toggle-btn');
+    if (toggleBtn) {
+      state.socket.emit('toggle-location', { locationName: toggleBtn.dataset.loc }, (res) => {
+        if (res?.error) showToast(res.error, 'error');
+      });
+      return;
+    }
+    // Info modal
     const tag = e.target.closest('.location-tag-clickable');
     if (!tag) return;
     showLocInfoModal(tag.dataset.loc, tag.dataset.roles.split('||').filter(Boolean));
@@ -841,6 +867,8 @@ function renderTurnState() {
 
   const isCurrent = rs.currentQuestioner === state.myName;
   document.getElementById('btn-skip-turn').classList.toggle('hidden', !isCurrent);
+  const hostAdvBtn = document.getElementById('btn-host-advance-turn');
+  if (hostAdvBtn) hostAdvBtn.classList.toggle('hidden', !state.isHost || isCurrent);
 }
 
 function renderActionPlayers() {
@@ -915,14 +943,36 @@ function toggleNotebook() {
 function renderNotebook() {
   const container = document.getElementById('nb-chips');
   if (!container) return;
-  const locations = state.roomState?.locations || [];
-  container.innerHTML = locations.map(loc => {
-    const ticked = state.notebook.has(loc);
-    return `<span class="nb-chip ${ticked ? 'ticked' : ''}" data-loc="${esc(loc)}">${esc(loc)}</span>`;
-  }).join('');
-  container.querySelectorAll('.nb-chip').forEach(el => {
-    el.addEventListener('click', () => tickLocation(el.dataset.loc));
-  });
+
+  // Update tab active state
+  document.querySelectorAll('.nb-tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.nbTab === state.notebookTab)
+  );
+
+  if (state.notebookTab === 'locations') {
+    const locations = state.roomState?.locations || [];
+    container.innerHTML = locations.map(loc => {
+      const ticked = state.notebook.has(loc);
+      return `<span class="nb-chip ${ticked ? 'ticked' : ''}" data-loc="${esc(loc)}">${esc(loc)}</span>`;
+    }).join('');
+    container.querySelectorAll('.nb-chip').forEach(el => {
+      el.addEventListener('click', () => { tickLocation(el.dataset.loc); });
+    });
+  } else {
+    const players = (state.roomState?.players || []).filter(p => p.name !== state.myName);
+    container.innerHTML = players.map(p => {
+      const ticked = state.notebookPlayers.has(p.name);
+      return `<span class="nb-chip ${ticked ? 'ticked' : ''}" data-player="${esc(p.name)}">${esc(p.name)}</span>`;
+    }).join('');
+    container.querySelectorAll('.nb-chip').forEach(el => {
+      el.addEventListener('click', () => {
+        const name = el.dataset.player;
+        if (state.notebookPlayers.has(name)) state.notebookPlayers.delete(name);
+        else state.notebookPlayers.add(name);
+        renderNotebook();
+      });
+    });
+  }
 }
 
 function tickLocation(name) {
@@ -1706,6 +1756,9 @@ function setupListeners() {
   // Notebook
   document.getElementById('btn-notebook').onclick = toggleNotebook;
   document.getElementById('btn-notebook-close').onclick = toggleNotebook;
+  document.querySelectorAll('.nb-tab').forEach(tab => {
+    tab.onclick = () => { state.notebookTab = tab.dataset.nbTab; renderNotebook(); };
+  });
   document.getElementById('btn-hints').onclick = toggleHintPanel;
   document.getElementById('btn-get-hint').onclick = requestHint;
   document.querySelectorAll('.hint-tab').forEach(tab => {
