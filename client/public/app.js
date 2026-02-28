@@ -89,7 +89,10 @@ const SFX = (() => {
     toggleMute() {
       muted = !muted;
       if (ambientMaster) {
-        ambientMaster.gain.setTargetAtTime(muted ? 0 : 0.09, getCtx().currentTime, 0.4);
+        const c = getCtx();
+        ambientMaster.gain.cancelScheduledValues(c.currentTime);
+        ambientMaster.gain.setValueAtTime(ambientMaster.gain.value, c.currentTime);
+        ambientMaster.gain.linearRampToValueAtTime(muted ? 0 : 0.09, c.currentTime + 0.4);
       }
       return muted;
     },
@@ -346,6 +349,8 @@ function connectSocket() {
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(`screen-${name}`).classList.add('active');
+  const fixedBtn = document.querySelector('.btn-sound-toggle-fixed');
+  if (fixedBtn) fixedBtn.style.display = ['lobby','playing','voting'].includes(name) ? 'none' : '';
 }
 
 function navigateToPhase(phase) {
