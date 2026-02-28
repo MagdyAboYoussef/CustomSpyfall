@@ -290,7 +290,7 @@
         </div>
       </div>
       <div class="chat-panel" id="chat-panel">
-        <div class="chat-header"><span>COMMS</span><button class="btn-sound-toggle">MUTE SOUND</button></div>
+        <div class="chat-header"><span>COMMS</span><button class="btn-sound-toggle">MUTE SOUND</button><button class="btn-chat-close" data-panel="chat-panel">✕</button></div>
         <div class="chat-messages" id="chat-messages"></div>
         <div class="chat-input-wrap">
           <input type="text" id="chat-input" placeholder="Send message..." maxlength="300" />
@@ -375,7 +375,7 @@
         <div class="hands-raised" id="hands-raised"></div>
       </div>
       <div class="chat-panel" id="chat-panel-play">
-        <div class="chat-header"><span>COMMS</span><button class="btn-sound-toggle">MUTE SOUND</button></div>
+        <div class="chat-header"><span>COMMS</span><button class="btn-sound-toggle">MUTE SOUND</button><button class="btn-chat-close" data-panel="chat-panel-play">✕</button></div>
         <div class="chat-messages" id="chat-messages-play"></div>
         <div class="chat-input-wrap">
           <input type="text" id="chat-input-play" placeholder="Send message..." maxlength="300" />
@@ -402,7 +402,7 @@
         </div>
       </div>
       <div class="chat-panel" id="chat-panel-vote">
-        <div class="chat-header"><span>COMMS</span><button class="btn-sound-toggle">MUTE SOUND</button></div>
+        <div class="chat-header"><span>COMMS</span><button class="btn-sound-toggle">MUTE SOUND</button><button class="btn-chat-close" data-panel="chat-panel-vote">✕</button></div>
         <div class="chat-messages" id="chat-messages-vote"></div>
         <div class="chat-input-wrap">
           <input type="text" id="chat-input-vote" placeholder="Send message..." maxlength="300" />
@@ -532,6 +532,8 @@
     </div>
     <div id="nb-chips" class="nb-chips"></div>
   </div>
+
+  <button id="btn-float-chat" class="btn-float-chat">COMMS</button>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="app.js"></script>

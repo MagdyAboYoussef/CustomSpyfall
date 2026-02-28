@@ -585,6 +585,11 @@ function showScreen(name) {
   document.getElementById(`screen-${name}`).classList.add('active');
   const fixedBtn = document.querySelector('.btn-sound-toggle-fixed');
   if (fixedBtn) fixedBtn.style.display = ['lobby','playing','voting'].includes(name) ? 'none' : '';
+  // Floating COMMS button: only on game screens that have a chat panel
+  const floatChat = document.getElementById('btn-float-chat');
+  if (floatChat) floatChat.style.display = ['lobby','playing','voting'].includes(name) ? '' : 'none';
+  // Close any open mobile chat when changing screens
+  document.querySelectorAll('.chat-panel.mobile-open').forEach(p => p.classList.remove('mobile-open'));
 }
 
 function navigateToPhase(phase) {
@@ -1931,6 +1936,23 @@ function setupListeners() {
   [['btn-clear-chat', 'chat-messages'], ['btn-clear-chat-play', 'chat-messages-play'], ['btn-clear-chat-vote', 'chat-messages-vote']].forEach(([btnId, msgId]) => {
     const btn = document.getElementById(btnId);
     if (btn) btn.onclick = () => { const el = document.getElementById(msgId); if (el) el.innerHTML = ''; };
+  });
+
+  // Mobile: floating COMMS button opens the active screen's chat panel
+  const floatChat = document.getElementById('btn-float-chat');
+  if (floatChat) {
+    floatChat.addEventListener('click', () => {
+      const active = document.querySelector('.screen.active');
+      const panel = active?.querySelector('.chat-panel');
+      if (panel) panel.classList.add('mobile-open');
+    });
+  }
+
+  // Mobile: close buttons inside chat headers
+  document.querySelectorAll('.btn-chat-close').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById(btn.dataset.panel)?.classList.remove('mobile-open');
+    });
   });
 }
 
