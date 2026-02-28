@@ -236,6 +236,14 @@
           <div id="scoreboard-list" class="scoreboard-list"></div>
         </div>
 
+        <!-- Round History -->
+        <div id="round-history-wrap" class="round-history-wrap hidden">
+          <div class="scoreboard-header">
+            <span class="section-label">ROUND HISTORY</span>
+          </div>
+          <div id="round-history-list" class="round-history-list"></div>
+        </div>
+
         <div class="lobby-controls" id="lobby-controls">
           <div class="timer-display" id="lobby-timer-display"></div>
           <div id="lobby-player-actions"></div>
@@ -330,6 +338,10 @@
         <div id="vote-ready-section" class="vote-ready-section hidden">
           <div id="vote-ready-status" class="vote-ready-status"></div>
           <button class="btn btn-ready-vote" id="btn-ready-vote">READY TO VOTE</button>
+          <div class="ready-who-wrap">
+            <button class="btn-who" id="btn-ready-who">WHO?</button>
+            <div class="ready-who-list hidden" id="ready-who-list"></div>
+          </div>
         </div>
 
         <div id="hint-panel" class="hint-panel hidden">
@@ -402,6 +414,7 @@
     <div class="results-wrap">
       <div class="result-verdict" id="result-verdict"></div>
       <div class="spy-reveal" id="spy-reveal"></div>
+      <div class="result-outcome" id="result-outcome"></div>
       <div class="result-location" id="result-location"></div>
       <div class="assignments-reveal" id="assignments-reveal"></div>
       <div id="vote-breakdown" class="vote-breakdown hidden"></div>

@@ -59,6 +59,8 @@ class GameManager {
       pendingVote: false,
       disabledLocations: new Set(),
       scores: {},
+      roundHistory: [],
+      roundNum: 0,
       createdAt: Date.now()
     };
 
@@ -212,6 +214,7 @@ class GameManager {
     room.handRaises = new Set();
     room.readyToVote = new Set();
     room.timeRemaining = room.timerSeconds;
+    room.roundNum = (room.roundNum || 0) + 1;
 
     return { room, assignments };
   }
@@ -338,12 +341,15 @@ class GameManager {
 
     let maxVotes = 0;
     let mostVotedId = null;
+    let isTie = false;
     for (const [id, count] of Object.entries(tally)) {
-      if (count > maxVotes) { maxVotes = count; mostVotedId = id; }
+      if (count > maxVotes) { maxVotes = count; mostVotedId = id; isTie = false; }
+      else if (count === maxVotes) { isTie = true; }
     }
 
+    // Tie = no clear majority = spy escapes
     const mostVotedPlayer = room.players.find(p => p.id === mostVotedId);
-    const spyCaught = room.currentRound.spies.includes(mostVotedId);
+    const spyCaught = !isTie && room.currentRound.spies.includes(mostVotedId);
 
     const spyIdSet = new Set(room.currentRound.spies);
 
@@ -359,6 +365,10 @@ class GameManager {
       const player = room.players.find(p => p.id === id);
       return { name: player?.name || '?', votes: count, isSpy: spyIdSet.has(id) };
     }).sort((a, b) => b.votes - a.votes);
+
+    // Snapshot scores before applying this round's points
+    const scoresBefore = {};
+    room.players.forEach(p => { scoresBefore[p.name] = room.scores[p.name] || 0; });
 
     if (spyCaught) {
       // Agents win: 2 pts each — spy still gets to guess for a consolation point
@@ -378,7 +388,15 @@ class GameManager {
       });
     }
 
+    // Compute how many points each player earned this round so far
+    const earnedThisRound = {};
+    room.players.forEach(p => {
+      earnedThisRound[p.name] = (room.scores[p.name] || 0) - (scoresBefore[p.name] || 0);
+    });
+
     room.currentRound.spyCaught = spyCaught;
+    room.currentRound.isTie = isTie;
+    room.currentRound.earnedThisRound = earnedThisRound;
     room.currentRound.voteBreakdown = voteBreakdown;
     room.currentRound.voteTally = voteTally;
     room.phase = PHASES.SPY_GUESS;
@@ -396,7 +414,7 @@ class GameManager {
       players: room.players
     };
 
-    return { ...base, awaitingSpyGuess: true, locations: room.locations.map(l => l.Location) };
+    return { ...base, awaitingSpyGuess: true, locations: room.locations.map(l => l.Location), earnedThisRound, isTie };
   }
 
   submitSpyGuess(code, socketId, guessedLocation) {
@@ -409,14 +427,23 @@ class GameManager {
     const correct = guessedLocation === room.currentRound.location;
     if (correct) {
       room.players.forEach(p => {
-        if (spyIdSet.has(p.id)) room.scores[p.name] = (room.scores[p.name] || 0) + 1;
+        if (spyIdSet.has(p.id)) {
+          room.scores[p.name] = (room.scores[p.name] || 0) + 1;
+          if (room.currentRound.earnedThisRound) {
+            room.currentRound.earnedThisRound[p.name] = (room.currentRound.earnedThisRound[p.name] || 0) + 1;
+          }
+        }
       });
     }
 
+    room.currentRound.guessedLocation = guessedLocation;
+    room.currentRound.guessCorrect = correct;
     room.phase = PHASES.RESULTS;
+    this._finalizeRoundHistory(room);
 
     return {
       spyCaught: room.currentRound.spyCaught ?? false,
+      isTie: room.currentRound.isTie ?? false,
       awaitingSpyGuess: false,
       guessedLocation,
       guessCorrect: correct,
@@ -425,8 +452,24 @@ class GameManager {
       assignments: room.currentRound.assignments,
       voteBreakdown: room.currentRound.voteBreakdown || [],
       voteTally: room.currentRound.voteTally || [],
+      earnedThisRound: room.currentRound.earnedThisRound || {},
       players: room.players
     };
+  }
+
+  _finalizeRoundHistory(room) {
+    const round = room.currentRound;
+    if (!round) return;
+    room.roundHistory.push({
+      roundNum: room.roundNum,
+      location: round.location,
+      spyNames: round.spyNames,
+      spyCaught: round.spyCaught ?? false,
+      isTie: round.isTie ?? false,
+      guessedLocation: round.guessedLocation ?? null,
+      guessCorrect: round.guessCorrect ?? false,
+      earnedThisRound: { ...(round.earnedThisRound || {}) }
+    });
   }
 
   kickPlayer(code, hostSocketId, targetId) {
@@ -600,7 +643,8 @@ class GameManager {
       maxPlayers: room.maxPlayers,
       scores: Object.entries(room.scores || {})
         .sort((a, b) => b[1] - a[1])
-        .map(([name, pts]) => ({ name, pts }))
+        .map(([name, pts]) => ({ name, pts })),
+      roundHistory: room.roundHistory || []
     };
   }
 }

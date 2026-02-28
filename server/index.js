@@ -608,8 +608,10 @@ function startGuessTimer(code) {
       clearInterval(interval);
       guessTimers.delete(code);
       r.phase = PHASES.RESULTS;
+      gameManager._finalizeRoundHistory(r);
       io.to(code).emit('game-over', {
         spyCaught: r.currentRound?.spyCaught ?? false,
+        isTie: r.currentRound?.isTie ?? false,
         awaitingSpyGuess: false,
         guessedLocation: null,
         guessCorrect: false,
@@ -618,6 +620,7 @@ function startGuessTimer(code) {
         assignments: r.currentRound?.assignments,
         voteBreakdown: r.currentRound?.voteBreakdown || [],
         voteTally: r.currentRound?.voteTally || [],
+        earnedThisRound: r.currentRound?.earnedThisRound || {},
         players: r.players,
         roomState: gameManager.getPublicRoomState(r)
       });

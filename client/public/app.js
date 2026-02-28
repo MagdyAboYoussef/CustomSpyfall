@@ -742,6 +742,49 @@ function renderLobby() {
       });
     });
   }
+
+  renderRoundHistory(rs.roundHistory || []);
+}
+
+function renderRoundHistory(history) {
+  const wrap = document.getElementById('round-history-wrap');
+  const list = document.getElementById('round-history-list');
+  if (!wrap || !list) return;
+  if (!history.length) { wrap.classList.add('hidden'); return; }
+  wrap.classList.remove('hidden');
+
+  list.innerHTML = [...history].reverse().map(rh => {
+    const spyLabel = rh.spyNames.map(esc).join(', ');
+    const outcomeClass = rh.spyCaught ? 'caught' : 'escaped';
+    let outcomeText;
+    if (rh.spyCaught) outcomeText = 'SPY CAUGHT';
+    else if (rh.isTie) outcomeText = 'TIE — ESCAPED';
+    else outcomeText = 'SPY ESCAPED';
+
+    let guessLine = '';
+    if (rh.guessedLocation) {
+      const cls = rh.guessCorrect ? 'correct' : 'wrong';
+      const mark = rh.guessCorrect ? '✓' : '✗';
+      guessLine = `<div class="rh-guess">Spy guessed: <span class="${cls}">${esc(rh.guessedLocation)} ${mark}</span></div>`;
+    }
+
+    const earnedChips = Object.entries(rh.earnedThisRound || {})
+      .map(([name, pts]) => {
+        const zeroCls = pts === 0 ? ' zero' : '';
+        return `<span class="rh-earn-chip">${esc(name)} <span class="earn-pts${zeroCls}">+${pts}</span></span>`;
+      }).join('');
+
+    return `<div class="rh-entry">
+      <div class="rh-header">
+        <span class="rh-round">ROUND ${rh.roundNum}</span>
+        <span class="rh-location">${esc(rh.location)}</span>
+        <span class="rh-outcome-badge ${outcomeClass}">${outcomeText}</span>
+      </div>
+      <div class="rh-spies">Spy: <strong>${spyLabel}</strong></div>
+      ${guessLine}
+      ${earnedChips ? `<div class="rh-earnings">${earnedChips}</div>` : ''}
+    </div>`;
+  }).join('');
 }
 
 // ─── Playing Screen ───────────────────────────────────────────────────────────
@@ -788,6 +831,15 @@ function renderVoteReadySection() {
       btn.textContent = 'READY TO VOTE';
       btn.classList.remove('is-ready');
     }
+  }
+
+  // Populate WHO list
+  const whoList = document.getElementById('ready-who-list');
+  if (whoList) {
+    const readyNames = readyToVote.map(id => rs.players.find(p => p.id === id)?.name).filter(Boolean);
+    whoList.innerHTML = readyNames.length
+      ? readyNames.map(n => `<div class="ready-who-entry">${esc(n)}</div>`).join('')
+      : '<div class="ready-who-empty">no one yet</div>';
   }
 }
 
@@ -1101,7 +1153,7 @@ function renderResultsScreen(result) {
   const verdict = document.getElementById('result-verdict');
   const spyNames = result.spyNames || [];
   const multiSpy = spyNames.length > 1;
-  verdict.textContent = result.spyCaught ? (multiSpy ? 'SPY CAUGHT' : 'SPY CAUGHT') : (multiSpy ? 'SPIES ESCAPED' : 'SPY ESCAPED');
+  verdict.textContent = result.spyCaught ? 'SPY CAUGHT' : (multiSpy ? 'SPIES ESCAPED' : 'SPY ESCAPED');
   verdict.className = 'result-verdict ' + (result.spyCaught ? 'caught' : 'escaped');
 
   let spyReveal = `The ${multiSpy ? 'spies were' : 'spy was'} <strong>${spyNames.map(esc).join(', ')}</strong>`;
@@ -1115,6 +1167,42 @@ function renderResultsScreen(result) {
     }
   }
   document.getElementById('spy-reveal').innerHTML = spyReveal;
+
+  // Outcome description
+  const outcomeEl = document.getElementById('result-outcome');
+  if (outcomeEl) {
+    const lines = [];
+    if (result.spyCaught) {
+      lines.push(`Spy caught — all agents earned <strong>+2 pts</strong>.`);
+      if (result.guessedLocation) {
+        lines.push(result.guessCorrect
+          ? `Spy guessed the location correctly — earned <strong>+1 consolation pt</strong>.`
+          : `Spy guessed wrong — no consolation points.`);
+      } else {
+        lines.push(`Spy did not guess in time.`);
+      }
+    } else if (result.isTie) {
+      lines.push(`Tie vote — no clear majority — spy escaped.`);
+      lines.push(`${multiSpy ? 'Spies' : 'Spy'} earned <strong>+2 pts</strong>. Agents who voted for the spy earned <strong>+1 pt</strong>.`);
+      if (result.guessedLocation) {
+        lines.push(result.guessCorrect
+          ? `Spy correctly guessed the location — earned an extra <strong>+1 pt</strong>.`
+          : `Spy guessed wrong — no bonus.`);
+      } else {
+        lines.push(`Spy did not guess in time.`);
+      }
+    } else {
+      lines.push(`Spy survived the vote — ${multiSpy ? 'spies' : 'spy'} earned <strong>+2 pts</strong>. Agents who voted for the spy earned <strong>+1 pt</strong>.`);
+      if (result.guessedLocation) {
+        lines.push(result.guessCorrect
+          ? `Spy correctly guessed the location — earned an extra <strong>+1 pt</strong>.`
+          : `Spy guessed wrong — no bonus.`);
+      } else {
+        lines.push(`Spy did not guess in time.`);
+      }
+    }
+    outcomeEl.innerHTML = lines.join('<br>');
+  }
 
   document.getElementById('result-location').textContent = result.location;
 
@@ -1158,19 +1246,27 @@ function renderResultsScreen(result) {
     vbEl.classList.add('hidden');
   }
 
-  // Results scoreboard
+  // Results scoreboard with earned-this-round breakdown
   const rsScores = state.roomState?.scores || [];
+  const earned = result.earnedThisRound || {};
   const rsScoreEl = document.getElementById('result-scoreboard');
   if (rsScores.length > 0) {
     rsScoreEl.classList.remove('hidden');
     rsScoreEl.innerHTML = '<div class="section-label" style="margin-bottom:0.5rem">SCOREBOARD</div>' +
-      rsScores.map((s, i) => `
-        <div class="score-row ${i === 0 ? 'score-top' : ''}">
-          <span class="score-rank">${i + 1}</span>
-          <span class="score-name">${esc(s.name)}</span>
-          <span class="score-pts">${s.pts} pt${s.pts !== 1 ? 's' : ''}</span>
-        </div>
-      `).join('');
+      rsScores.map((s, i) => {
+        const e = earned[s.name] ?? 0;
+        const earnedStr = e > 0
+          ? `<span class="score-earned">+${e}</span>`
+          : `<span class="score-earned earned-zero">+0</span>`;
+        return `
+          <div class="score-row ${i === 0 ? 'score-top' : ''}">
+            <span class="score-rank">${i + 1}</span>
+            <span class="score-name">${esc(s.name)}</span>
+            <span class="score-pts">${s.pts} pt${s.pts !== 1 ? 's' : ''}</span>
+            ${earnedStr}
+          </div>
+        `;
+      }).join('');
   } else {
     rsScoreEl.classList.add('hidden');
   }
@@ -1752,6 +1848,15 @@ function setupListeners() {
       });
     }
   };
+
+  // WHO? dropdown
+  document.getElementById('btn-ready-who').onclick = (e) => {
+    e.stopPropagation();
+    document.getElementById('ready-who-list').classList.toggle('hidden');
+  };
+  document.addEventListener('click', () => {
+    document.getElementById('ready-who-list')?.classList.add('hidden');
+  });
 
   // Notebook
   document.getElementById('btn-notebook').onclick = toggleNotebook;
