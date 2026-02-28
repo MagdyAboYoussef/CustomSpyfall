@@ -404,6 +404,8 @@ function connectSocket() {
 
   socket.on('spectator-info', ({ location, spyNames, assignments }) => {
     state.privateInfo = { isSpectator: true, location, spyNames, assignments };
+    renderRoleCard();
+    updateChatInputsForSpectator();
   });
 
   socket.on('question-asked', ({ askerName, targetName, roomState }) => {
@@ -725,6 +727,7 @@ function renderPlayingScreen() {
   renderActionPlayers();
   renderHandRaises();
   renderVoteReadySection();
+  updateChatInputsForSpectator();
 
   // Show/hide controls
   const isCurrent = rs.currentQuestioner === state.myName;
@@ -784,6 +787,9 @@ function renderRoleCard() {
 
 function leaveRoom() {
   SFX.leave();
+  if (state.roomCode && state.myName) {
+    localStorage.setItem('spycraft-last', JSON.stringify({ code: state.roomCode, name: state.myName }));
+  }
   state.socket.emit('leave-room');
   sessionStorage.removeItem('spycraft-session');
   state.roomCode = null;
@@ -928,13 +934,8 @@ function tickLocation(name) {
 // ─── Hints ─────────────────────────────────────────────────────────────────────
 function initHints() {
   if (state.hintState?.interval) clearInterval(state.hintState.interval);
-  const shuffle = arr => arr.sort(() => Math.random() - 0.5);
   state.hintState = {
     type: 'location',
-    locPool: shuffle([...Array(HINTS_LOCATION.length).keys()]),
-    topPool: shuffle([...Array(HINTS_TOPIC.length).keys()]),
-    locPtr: 0,
-    topPtr: 0,
     cooldownEnd: 0,
     currentHint: null,
     interval: null,
@@ -944,12 +945,11 @@ function initHints() {
 function requestHint() {
   const hs = state.hintState;
   if (!hs || Date.now() < hs.cooldownEnd) return;
-  const isLoc = hs.type === 'location';
-  const pool = isLoc ? hs.locPool : hs.topPool;
-  const hints = isLoc ? HINTS_LOCATION : HINTS_TOPIC;
-  const ptr = isLoc ? hs.locPtr : hs.topPtr;
-  hs.currentHint = hints[pool[ptr % pool.length]];
-  if (isLoc) hs.locPtr++; else hs.topPtr++;
+  const hints = hs.type === 'location' ? HINTS_LOCATION : HINTS_TOPIC;
+  let idx;
+  do { idx = Math.floor(Math.random() * hints.length); }
+  while (hints[idx] === hs.currentHint && hints.length > 1);
+  hs.currentHint = hints[idx];
   hs.cooldownEnd = Date.now() + 5000;
   renderHintPanel();
   startHintCountdown();
@@ -1166,6 +1166,7 @@ function addSystemChat(panel, text) {
 }
 
 function sendChat(inputId) {
+  if (state.isSpectator) { showToast('Spectators cannot send messages', 'warn'); return; }
   const input = document.getElementById(inputId);
   const msg = input.value.trim();
   if (!msg) return;
@@ -1580,6 +1581,11 @@ function setupListeners() {
       const stored = JSON.parse(sessionStorage.getItem('spycraft-session') || '{}');
       if (stored.code === e.target.value && stored.name)
         document.getElementById('join-name').value = stored.name;
+      else {
+        const last = JSON.parse(localStorage.getItem('spycraft-last') || '{}');
+        if (last.code === e.target.value && last.name)
+          document.getElementById('join-name').value = last.name;
+      }
     } catch(_) {}
   });
 
@@ -1699,6 +1705,7 @@ function setupListeners() {
 
   // Notebook
   document.getElementById('btn-notebook').onclick = toggleNotebook;
+  document.getElementById('btn-notebook-close').onclick = toggleNotebook;
   document.getElementById('btn-hints').onclick = toggleHintPanel;
   document.getElementById('btn-get-hint').onclick = requestHint;
   document.querySelectorAll('.hint-tab').forEach(tab => {
@@ -1753,9 +1760,29 @@ function setupChatInput(inputId, btnId, panel) {
   btn.onclick = () => sendChat(inputId);
 }
 
+function updateChatInputsForSpectator() {
+  const ids = [
+    ['chat-input', 'btn-send-chat'],
+    ['chat-input-play', 'btn-send-chat-play'],
+    ['chat-input-vote', 'btn-send-chat-vote'],
+  ];
+  ids.forEach(([inputId, btnId]) => {
+    const input = document.getElementById(inputId);
+    const btn = document.getElementById(btnId);
+    if (input) { input.disabled = state.isSpectator; input.placeholder = state.isSpectator ? 'Spectators cannot send messages' : 'Send message...'; }
+    if (btn) btn.disabled = state.isSpectator;
+  });
+}
+
 // ─── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   connectSocket();
   setupListeners();
   loadBuiltinLocations();
+  // Prefill join form from last visited room
+  try {
+    const last = JSON.parse(localStorage.getItem('spycraft-last') || '{}');
+    if (last.code) document.getElementById('join-code').value = last.code;
+    if (last.name) document.getElementById('join-name').value = last.name;
+  } catch(_) {}
 });

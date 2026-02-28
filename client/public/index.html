@@ -348,11 +348,11 @@
 
         <div class="playing-controls">
           <button class="btn btn-outline" id="btn-raise-hand">✋ Raise Hand</button>
-          <button class="btn btn-skip" id="btn-skip-turn">SKIP TURN</button>
+          <button class="btn btn-skip" id="btn-skip-turn">END TURN</button>
           <button class="btn btn-outline" id="btn-notebook">NOTEBOOK</button>
           <button class="btn btn-outline" id="btn-hints">HINTS</button>
           <div id="host-vote-control" class="hidden">
-            <button class="btn btn-outline btn-sm" id="btn-host-advance-turn">SKIP PLAYER TURN</button>
+            <button class="btn btn-outline btn-sm" id="btn-host-advance-turn">END PLAYER TURN</button>
             <button class="btn btn-danger" id="btn-start-voting">START VOTE</button>
           </div>
           <button class="btn-leave" id="btn-leave-playing" title="Leave room">✕ LEAVE</button>
@@ -508,6 +508,7 @@
     <div class="nb-panel-header">
       <span>NOTEBOOK</span>
       <span class="nb-panel-hint">click to cross out</span>
+      <button id="btn-notebook-close" class="nb-close-btn" title="Close notebook">✕</button>
     </div>
     <div id="nb-chips" class="nb-chips"></div>
   </div>

@@ -443,8 +443,9 @@ io.on('connection', (socket) => {
     cb?.({ success: true });
   });
 
-  // Chat
+  // Chat (spectators cannot send)
   socket.on('chat-message', ({ message }, cb) => {
+    if (socket.data.isSpectator) return cb?.({ success: false, error: 'Spectators cannot send messages' });
     const code = socket.data.roomCode;
     const msg = gameManager.addChat(code, socket.id, message);
     if (!msg) return cb?.({ success: false });
