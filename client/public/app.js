@@ -753,6 +753,18 @@ function renderRoundHistory(history) {
   if (!history.length) { wrap.classList.add('hidden'); return; }
   wrap.classList.remove('hidden');
 
+  // Wire toggle once
+  const header = document.getElementById('btn-toggle-round-history');
+  const arrow = document.getElementById('rh-arrow');
+  if (header && !header.dataset.wired) {
+    header.dataset.wired = '1';
+    header.addEventListener('click', () => {
+      const open = !list.classList.contains('hidden');
+      list.classList.toggle('hidden', open);
+      if (arrow) arrow.textContent = open ? '▶' : '▼';
+    });
+  }
+
   list.innerHTML = [...history].reverse().map(rh => {
     const spyLabel = rh.spyNames.map(esc).join(', ');
     const outcomeClass = rh.spyCaught ? 'caught' : 'escaped';
@@ -1057,6 +1069,10 @@ function requestHint() {
   startHintCountdown();
 }
 
+function hintBtnLabel() {
+  return state.hintState?.type === 'topic' ? 'GET HINT ON TOPICS' : 'GET HINT ON LOCATIONS';
+}
+
 function startHintCountdown() {
   const hs = state.hintState;
   if (!hs) return;
@@ -1070,7 +1086,7 @@ function startHintCountdown() {
       if (btn) { btn.disabled = true; btn.textContent = 'WAIT'; }
     } else {
       if (cd) cd.textContent = '';
-      if (btn) { btn.disabled = false; btn.textContent = 'GET HINT'; }
+      if (btn) { btn.disabled = false; btn.textContent = hintBtnLabel(); }
       clearInterval(hs.interval);
       hs.interval = null;
     }
@@ -1084,6 +1100,8 @@ function renderHintPanel() {
   document.querySelectorAll('.hint-tab').forEach(t =>
     t.classList.toggle('active', t.dataset.hintType === hs?.type)
   );
+  const btn = document.getElementById('btn-get-hint');
+  if (btn && !btn.disabled) btn.textContent = hintBtnLabel();
 }
 
 function toggleHintPanel() {
@@ -1093,6 +1111,7 @@ function toggleHintPanel() {
   const opening = panel.classList.contains('hidden');
   panel.classList.toggle('hidden', !opening);
   btn?.classList.toggle('btn-notebook-active', opening);
+  if (opening) renderHintPanel();
 }
 
 function renderTimer() {

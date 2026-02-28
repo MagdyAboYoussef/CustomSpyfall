@@ -390,11 +390,11 @@ input[type="text"]:focus, input[type="number"]:focus {
 .location-tag.loc-disabled.location-tag-clickable { text-decoration: line-through; }
 .location-tag-name { cursor: pointer; }
 .loc-toggle-btn {
-  background: none; border: none; cursor: pointer; padding: 0 0 0 0.3rem;
-  font-size: 0.65rem; line-height: 1; color: var(--text-muted); transition: color 0.15s;
+  background: none; border: none; cursor: pointer; padding: 0 0 0 0.35rem;
+  font-size: 0.8rem; line-height: 1; color: #4da6ff; transition: color 0.15s;
   vertical-align: middle; font-family: var(--font-mono);
 }
-.loc-toggle-btn:hover { color: var(--red); }
+.loc-toggle-btn:hover { color: #80c4ff; }
 
 .players-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.75rem;
@@ -1052,11 +1052,11 @@ input[type="text"]:focus, input[type="number"]:focus {
 .hint-tabs { display: flex; gap: 0.4rem; margin-bottom: 0.55rem; }
 .hint-tab {
   font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em;
-  padding: 0.2rem 0.65rem; border: 1px solid var(--border);
-  background: transparent; color: var(--text-muted); cursor: pointer; transition: all 0.15s;
+  padding: 0.2rem 0.65rem; border: 1px solid #4da6ff;
+  background: transparent; color: #4da6ff; cursor: pointer; transition: all 0.15s;
 }
 .hint-tab.active { border-color: var(--red); color: var(--red); }
-.hint-tab:hover { border-color: var(--text-muted); color: var(--text); }
+.hint-tab:hover { border-color: #80c4ff; color: #80c4ff; }
 .hint-body { display: flex; flex-direction: column; gap: 0.45rem; }
 .hint-text {
   font-family: var(--font-mono); font-size: 0.8rem; color: var(--text);
@@ -1066,9 +1066,9 @@ input[type="text"]:focus, input[type="number"]:focus {
 .btn-get-hint {
   font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em;
   padding: 0.2rem 0.65rem; background: transparent;
-  border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; transition: all 0.15s;
+  border: 1px solid var(--green); color: var(--green); cursor: pointer; transition: all 0.15s;
 }
-.btn-get-hint:hover:not(:disabled) { border-color: var(--red); color: var(--red); }
+.btn-get-hint:hover:not(:disabled) { border-color: #6effa0; color: #6effa0; }
 .btn-get-hint:disabled { opacity: 0.35; cursor: not-allowed; }
 .hint-countdown { font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-muted); }
 
@@ -1139,11 +1139,11 @@ input[type="text"]:focus, input[type="number"]:focus {
 }
 .nb-chip {
   font-family: var(--font-mono); font-size: 0.7rem; padding: 0.2rem 0.55rem;
-  border: 1px solid var(--border); background: var(--surface2); color: var(--text-dim);
+  border: 1px solid #4da6ff; background: var(--surface2); color: #4da6ff;
   cursor: pointer; user-select: none; transition: all 0.1s;
 }
-.nb-chip:hover { border-color: var(--amber); color: var(--text); }
-.nb-chip.ticked { opacity: 0.32; text-decoration: line-through; border-color: transparent; }
+.nb-chip:hover { border-color: #80c4ff; color: #80c4ff; }
+.nb-chip.ticked { color: var(--amber); border-color: var(--amber); text-decoration: line-through; opacity: 0.55; }
 .btn-notebook-active { border-color: var(--amber) !important; color: var(--amber) !important; }
 
 /* ─── Result outcome description ─────────────────────────────────────────── */
@@ -1166,6 +1166,13 @@ input[type="text"]:focus, input[type="number"]:focus {
   margin-top: 1.25rem; border: 1px solid var(--border);
   background: var(--surface2); padding: 0.75rem 1rem;
 }
+.rh-toggle-header { user-select: none; }
+.rh-toggle-header:hover .section-label { color: var(--text); }
+.rh-toggle-arrow {
+  font-family: var(--font-mono); font-size: 0.6rem;
+  color: var(--text-muted); transition: color 0.15s;
+}
+.rh-toggle-header:hover .rh-toggle-arrow { color: var(--text); }
 .round-history-list { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.4rem; }
 .rh-entry {
   border: 1px solid var(--border); background: var(--surface);

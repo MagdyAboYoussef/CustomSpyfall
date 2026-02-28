@@ -238,10 +238,11 @@
 
         <!-- Round History -->
         <div id="round-history-wrap" class="round-history-wrap hidden">
-          <div class="scoreboard-header">
+          <div class="scoreboard-header rh-toggle-header" id="btn-toggle-round-history" style="cursor:pointer">
             <span class="section-label">ROUND HISTORY</span>
+            <span class="rh-toggle-arrow" id="rh-arrow">▶</span>
           </div>
-          <div id="round-history-list" class="round-history-list"></div>
+          <div id="round-history-list" class="round-history-list hidden"></div>
         </div>
 
         <div class="lobby-controls" id="lobby-controls">
@@ -352,7 +353,7 @@
           <div class="hint-body">
             <div id="hint-text" class="hint-text"></div>
             <div class="hint-footer">
-              <button id="btn-get-hint" class="btn-get-hint">GET HINT</button>
+              <button id="btn-get-hint" class="btn-get-hint">GET HINT ON LOCATIONS</button>
               <span id="hint-countdown" class="hint-countdown"></span>
             </div>
           </div>
