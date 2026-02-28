@@ -173,6 +173,8 @@ function connectSocket() {
     state.roomState = roomState;
     state.hasRaisedHand = false;
     state.notebook = new Set();
+    document.getElementById('notebook-panel')?.classList.remove('open');
+    document.getElementById('btn-notebook')?.classList.remove('btn-notebook-active');
     showScreen('playing');
     renderPlayingScreen();
     resetRoleReveal();
@@ -299,6 +301,8 @@ function connectSocket() {
 
   socket.on('game-over', (result) => {
     document.getElementById('spy-guess-modal').classList.add('hidden');
+    document.getElementById('notebook-panel')?.classList.remove('open');
+    document.getElementById('btn-notebook')?.classList.remove('btn-notebook-active');
     result.spyCaught ? SFX.caught() : SFX.escaped();
     renderResultsScreen(result);
     showScreen('results');
@@ -654,25 +658,28 @@ function renderHandRaises() {
 
 // ─── Notebook ─────────────────────────────────────────────────────────────────
 function toggleNotebook() {
-  const modal = document.getElementById('notebook-modal');
-  if (!modal) return;
-  if (modal.classList.contains('hidden')) {
-    renderNotebook();
-    modal.classList.remove('hidden');
+  const panel = document.getElementById('notebook-panel');
+  const btn = document.getElementById('btn-notebook');
+  const isOpen = panel.classList.contains('open');
+  if (isOpen) {
+    panel.classList.remove('open');
+    btn.classList.remove('btn-notebook-active');
   } else {
-    modal.classList.add('hidden');
+    renderNotebook();
+    panel.classList.add('open');
+    btn.classList.add('btn-notebook-active');
   }
 }
 
 function renderNotebook() {
-  const list = document.getElementById('nb-list');
-  if (!list) return;
+  const container = document.getElementById('nb-chips');
+  if (!container) return;
   const locations = state.roomState?.locations || [];
-  list.innerHTML = locations.map(loc => {
+  container.innerHTML = locations.map(loc => {
     const ticked = state.notebook.has(loc);
-    return `<div class="nb-location ${ticked ? 'ticked' : ''}" data-loc="${esc(loc)}">${esc(loc)}</div>`;
+    return `<span class="nb-chip ${ticked ? 'ticked' : ''}" data-loc="${esc(loc)}">${esc(loc)}</span>`;
   }).join('');
-  list.querySelectorAll('.nb-location').forEach(el => {
+  container.querySelectorAll('.nb-chip').forEach(el => {
     el.addEventListener('click', () => tickLocation(el.dataset.loc));
   });
 }
@@ -1356,10 +1363,6 @@ function setupListeners() {
 
   // Notebook
   document.getElementById('btn-notebook').onclick = toggleNotebook;
-  document.getElementById('notebook-close').onclick = () =>
-    document.getElementById('notebook-modal').classList.add('hidden');
-  document.getElementById('notebook-backdrop').onclick = () =>
-    document.getElementById('notebook-modal').classList.add('hidden');
 
   // Location info modal close
   document.getElementById('loc-info-close').onclick = () =>

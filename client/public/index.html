@@ -488,17 +488,12 @@
     </div>
   </div>
 
-  <!-- Notebook Modal -->
-  <div id="notebook-modal" class="loc-info-modal hidden">
-    <div class="loc-info-backdrop" id="notebook-backdrop"></div>
-    <div class="loc-info-content notebook-content">
-      <div class="loc-info-header">
-        <div class="loc-info-name" style="font-size:1.4rem">NOTEBOOK</div>
-        <button class="loc-info-close" id="notebook-close">✕</button>
-      </div>
-      <div class="loc-info-label">LOCATIONS — click to cross out</div>
-      <div id="nb-list" class="nb-list"></div>
+  <div id="notebook-panel" class="notebook-panel">
+    <div class="nb-panel-header">
+      <span>NOTEBOOK</span>
+      <span class="nb-panel-hint">click to cross out</span>
     </div>
+    <div id="nb-chips" class="nb-chips"></div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
