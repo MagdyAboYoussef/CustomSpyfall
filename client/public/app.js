@@ -354,9 +354,10 @@ function renderLobby() {
   const grid = document.getElementById('lobby-players');
   grid.innerHTML = rs.players.map(p => `
     <div class="player-tile ${p.isHost ? 'host' : ''} ${!p.connected ? 'disconnected' : ''}">
+      <div class="player-tile-dot"></div>
       ${state.isHost && !p.isHost
         ? `<button class="btn-kick" data-id="${esc(p.id)}" title="Remove player">✕</button>`
-        : `<div class="player-tile-dot"></div>`}
+        : ''}
       <div class="player-tile-name">${esc(p.name)}</div>
       <div class="player-tile-badge">${p.isHost ? 'HOST' : 'AGENT'}</div>
     </div>
@@ -1101,11 +1102,20 @@ function setupListeners() {
   // Join room
   document.getElementById('btn-join-room').onclick = () => {
     const code = document.getElementById('join-code').value.trim().toUpperCase();
-    const name = document.getElementById('join-name').value.trim();
+    let name = document.getElementById('join-name').value.trim();
     const asSpectator = document.getElementById('join-spectator').checked;
     const errEl = document.getElementById('join-error');
     if (!code) { errEl.textContent = 'Enter a room code'; errEl.classList.remove('hidden'); return; }
     if (!name) { errEl.textContent = 'Enter a codename'; errEl.classList.remove('hidden'); return; }
+    // If we have a stored session for this room, force the original name to avoid ghost duplicates
+    try {
+      const stored = JSON.parse(sessionStorage.getItem('spycraft-session') || '{}');
+      if (stored.code === code && stored.name && stored.name !== name) {
+        name = stored.name;
+        document.getElementById('join-name').value = name;
+        showToast(`Rejoining as ${name}`, 'info');
+      }
+    } catch(_) {}
     errEl.classList.add('hidden');
 
     state.socket.emit('join-room', { code, name, asSpectator }, (res) => {
@@ -1122,7 +1132,14 @@ function setupListeners() {
   };
   // Enter key for join
   document.getElementById('join-name').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('btn-join-room').click(); });
-  document.getElementById('join-code').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase(); });
+  document.getElementById('join-code').addEventListener('input', e => {
+    e.target.value = e.target.value.toUpperCase();
+    try {
+      const stored = JSON.parse(sessionStorage.getItem('spycraft-session') || '{}');
+      if (stored.code === e.target.value && stored.name)
+        document.getElementById('join-name').value = stored.name;
+    } catch(_) {}
+  });
 
   // Copy code
   document.getElementById('btn-copy-code').onclick = () => {
@@ -1230,6 +1247,13 @@ function setupListeners() {
     document.getElementById('loc-info-modal').classList.add('hidden');
 
   // About modal
+  document.getElementById('btn-rules-lobby').onclick = () =>
+    document.getElementById('rules-modal').classList.remove('hidden');
+  document.getElementById('rules-close').onclick = () =>
+    document.getElementById('rules-modal').classList.add('hidden');
+  document.getElementById('rules-backdrop').onclick = () =>
+    document.getElementById('rules-modal').classList.add('hidden');
+
   document.getElementById('btn-about').onclick = () =>
     document.getElementById('about-modal').classList.remove('hidden');
   document.getElementById('about-close').onclick = () =>

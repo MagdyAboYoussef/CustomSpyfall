@@ -91,6 +91,9 @@
         </div>
       </div>
 
+      <button class="btn btn-primary full" id="btn-create-room">INITIATE ROOM</button>
+      <div id="create-error" class="error-msg hidden"></div>
+
       <div class="form-group">
         <label>LOCATION DOSSIER</label>
         <div class="loc-source-tabs">
@@ -149,7 +152,7 @@
               <span class="file-icon">📁</span>
               <span id="file-label">Drop CSV or click to browse</span>
               <span class="file-format">Any column after Location is treated as a role</span>
-              <span class="file-format" style="color:var(--text-muted);margin-top:0.2rem">Example: Location, Spy, Thief, Guard, Tourist</span>
+              <span class="csv-example">Location,Role1,Role2,Role3,Role4&#10;The Library,Librarian,Student,Researcher,Security&#10;The Gym,Trainer,Member,Coach,Receptionist</span>
             </div>
             <input type="file" id="csv-input" accept=".csv" />
           </div>
@@ -167,8 +170,6 @@
         </div>
       </div>
 
-      <button class="btn btn-primary full" id="btn-create-room">INITIATE ROOM</button>
-      <div id="create-error" class="error-msg hidden"></div>
     </div>
   </div>
 
@@ -214,6 +215,7 @@
           </div>
           <div class="lobby-header-right">
             <div class="player-count-badge" id="player-count">0 agents</div>
+            <button class="btn-rules" id="btn-rules-lobby" title="How to play">? RULES</button>
             <button class="btn-leave" id="btn-leave-lobby" title="Leave room">✕ LEAVE</button>
           </div>
         </div>
@@ -386,6 +388,35 @@
           <button class="btn btn-primary" id="btn-reset-room">PLAY AGAIN</button>
         </div>
         <button class="btn btn-ghost" id="btn-leave-results">LEAVE ROOM</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rules Modal -->
+  <div id="rules-modal" class="loc-info-modal hidden">
+    <div class="loc-info-backdrop" id="rules-backdrop"></div>
+    <div class="loc-info-content about-content">
+      <div class="loc-info-header">
+        <div class="loc-info-name" style="font-size:1.4rem">HOW TO PLAY</div>
+        <button class="loc-info-close" id="rules-close">✕</button>
+      </div>
+      <div class="about-section">
+        <div class="loc-info-label">THE SETUP</div>
+        <p class="about-text">One or more players are secretly assigned the role of <strong>Spy</strong>. The spy does not know the location. Every other player knows the location and is given a unique role within it.</p>
+      </div>
+      <div class="about-section">
+        <div class="loc-info-label">GAMEPLAY</div>
+        <p class="about-text">Players take turns asking each other one question at a time. Agents must answer convincingly without revealing too much about the location. The spy must answer without giving away that they don't know where they are.</p>
+        <p class="about-text">The active player chooses who to ask next. The host can skip a turn or start a vote at any time.</p>
+      </div>
+      <div class="about-section">
+        <div class="loc-info-label">WINNING</div>
+        <p class="about-text"><strong>Agents win</strong> by voting out the spy with a majority vote.</p>
+        <p class="about-text"><strong>The spy wins</strong> by surviving the vote — earning <strong>1 point</strong>. The spy then gets one chance to guess the location: a correct guess earns <strong>+2 bonus points</strong> (3 total). A wrong guess keeps only the 1 survival point.</p>
+      </div>
+      <div class="about-section">
+        <div class="loc-info-label">TIPS</div>
+        <p class="about-text">As an agent, ask questions that someone unfamiliar with the location couldn't answer easily. As the spy, listen carefully — the questions themselves reveal clues about where you are.</p>
       </div>
     </div>
   </div>
