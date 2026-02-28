@@ -838,6 +838,7 @@ input[type="text"]:focus, input[type="number"]:focus {
   background: var(--surface); border: 1px solid var(--border);
   padding: 1.5rem; min-width: 240px; max-width: 340px; width: 90%;
   border-top: 2px solid var(--red);
+  max-height: 88vh; overflow-y: auto;
 }
 .loc-info-header {
   display: flex; align-items: center; justify-content: space-between;
