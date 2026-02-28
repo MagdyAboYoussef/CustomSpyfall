@@ -9,19 +9,27 @@ One or more players are secretly the **Spy**. They don't know the location. Ever
 <img width="1912" height="948" alt="image" src="https://github.com/user-attachments/assets/a4ed83fe-0a82-4270-934e-84bbc7e3c0c8" />
 
 > Built as a free, non-profit hobby project — made for playing with friends. I was not able to find a similar project online while looking up
-> I eventually plan to deploy this online but for now the ngrok setup was enough to get it up and running when needed, tried it with custom csv with friends on different categories in discord and was overall fun experience.
+> If you want to host it locally the ngrok setup was enough to get it up and running when needed, tried it with custom csv with friends on different categories in discord and was overall fun experience.
 > I added some default categorties (which are AI generated) but the entire idea of this is to allow your friend groups to host their own categories with the csv setup
 
 - Added some unique rules:
-   - If a hand is raised host can give questioning rights
-   - Host can also skip someone's turn
-   - A spy wins 1 point if he wins, but gets to guess location if he guessed right he earns 2 additional points
-   - if a spy is caught all the lobby wins 1 points
+   - If a hand is raised host can give questioning rights even if the time runs out (Host has to resolve)
+   - Host can also End someone's turn
+   - A spy wins 2 point if he wins, but gets to guess location if he guessed right he earns 1 additional point
+   - if a spy is caught all the lobby wins 2 points
+   - If the spy escaped, the people who guessed but lost due to minority gets 1 point
    - if the voting is a draw the spy wins
    - You can click on the location to view all available roles (not inside the game just in lobbies)
    - If someone doesn't want to ask in his turn hes free to skip
+   - You can check your notebook to mark locations you suspect are not being discussed (if spy)
+   - You can check your ntoebook and mark out players you suspect are not spy
+   - If you want to view some general questions view the Hints section and select for category/topic
+   - You can see who voted for who after the round, and the spy guess and point distribution/logs
+   - You are able to enable/disabled locations between rounds, and you can see point history
+   - You are also able to view who is ready to vote, and who voted (but not voted for who until the round is over)
 
 **🌐 Play now:** https://customspyfall.fly.dev
+
 **📂 Source:** https://github.com/MagdyAboYoussef/CustomSpyfall
 
 ---
