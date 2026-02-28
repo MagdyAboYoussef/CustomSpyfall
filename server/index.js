@@ -546,6 +546,8 @@ function startGuessTimer(code) {
         spyNames: r.currentRound?.spyNames,
         location: r.currentRound?.location,
         assignments: r.currentRound?.assignments,
+        voteBreakdown: r.currentRound?.voteBreakdown || [],
+        voteTally: r.currentRound?.voteTally || [],
         players: r.players,
         roomState: gameManager.getPublicRoomState(r)
       });

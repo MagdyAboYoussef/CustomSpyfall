@@ -332,10 +332,25 @@
           <button class="btn btn-ready-vote" id="btn-ready-vote">READY TO VOTE</button>
         </div>
 
+        <div id="hint-panel" class="hint-panel hidden">
+          <div class="hint-tabs">
+            <button class="hint-tab active" data-hint-type="location">LOCATION</button>
+            <button class="hint-tab" data-hint-type="topic">TOPIC</button>
+          </div>
+          <div class="hint-body">
+            <div id="hint-text" class="hint-text"></div>
+            <div class="hint-footer">
+              <button id="btn-get-hint" class="btn-get-hint">GET HINT</button>
+              <span id="hint-countdown" class="hint-countdown"></span>
+            </div>
+          </div>
+        </div>
+
         <div class="playing-controls">
           <button class="btn btn-outline" id="btn-raise-hand">✋ Raise Hand</button>
           <button class="btn btn-skip" id="btn-skip-turn">SKIP TURN</button>
           <button class="btn btn-outline" id="btn-notebook">NOTEBOOK</button>
+          <button class="btn btn-outline" id="btn-hints">HINTS</button>
           <div id="host-vote-control" class="hidden">
             <button class="btn btn-outline btn-sm" id="btn-host-advance-turn">SKIP PLAYER TURN</button>
             <button class="btn btn-danger" id="btn-start-voting">START VOTE</button>
@@ -389,6 +404,7 @@
       <div class="spy-reveal" id="spy-reveal"></div>
       <div class="result-location" id="result-location"></div>
       <div class="assignments-reveal" id="assignments-reveal"></div>
+      <div id="vote-breakdown" class="vote-breakdown hidden"></div>
       <div id="result-scoreboard" class="result-scoreboard hidden"></div>
       <div class="result-actions">
         <div id="host-reset" class="hidden">

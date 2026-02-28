@@ -342,6 +342,18 @@ class GameManager {
 
     const spyIdSet = new Set(room.currentRound.spies);
 
+    // Build vote breakdown (who voted for whom)
+    const voteBreakdown = Object.entries(room.votes).map(([voterId, targetId]) => {
+      const voter = room.players.find(p => p.id === voterId);
+      const voted = room.players.find(p => p.id === targetId);
+      return { voterName: voter?.name || '?', votedForName: voted?.name || '?', votedForSpy: spyIdSet.has(targetId) };
+    });
+
+    const voteTally = Object.entries(tally).map(([id, count]) => {
+      const player = room.players.find(p => p.id === id);
+      return { name: player?.name || '?', votes: count, isSpy: spyIdSet.has(id) };
+    }).sort((a, b) => b.votes - a.votes);
+
     if (spyCaught) {
       // Agents win: 2 pts each — spy still gets to guess for a consolation point
       room.players.forEach(p => {
@@ -349,18 +361,26 @@ class GameManager {
         if (!spyIdSet.has(p.id)) room.scores[p.name] += 2;
       });
     } else {
-      // Spy survives: 2 pts — may earn 1 more by guessing the location
+      // Spy survives: 2 pts. Agents who voted correctly get +1 consolation point.
       room.players.forEach(p => {
         if (!room.scores[p.name]) room.scores[p.name] = 0;
-        if (spyIdSet.has(p.id)) room.scores[p.name] += 2;
+        if (spyIdSet.has(p.id)) {
+          room.scores[p.name] += 2;
+        } else if (room.votes[p.id] && spyIdSet.has(room.votes[p.id])) {
+          room.scores[p.name] += 1;
+        }
       });
     }
 
     room.currentRound.spyCaught = spyCaught;
+    room.currentRound.voteBreakdown = voteBreakdown;
+    room.currentRound.voteTally = voteTally;
     room.phase = PHASES.SPY_GUESS;
 
     const base = {
       tally,
+      voteTally,
+      voteBreakdown,
       mostVotedPlayer: mostVotedPlayer?.name,
       mostVotedId,
       spyCaught,
@@ -397,6 +417,8 @@ class GameManager {
       spyNames: room.currentRound.spyNames,
       location: room.currentRound.location,
       assignments: room.currentRound.assignments,
+      voteBreakdown: room.currentRound.voteBreakdown || [],
+      voteTally: room.currentRound.voteTally || [],
       players: room.players
     };
   }

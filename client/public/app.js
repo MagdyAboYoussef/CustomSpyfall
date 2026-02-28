@@ -100,6 +100,214 @@ const SFX = (() => {
   };
 })();
 
+// ─── Hint question banks ───────────────────────────────────────────────────────
+const HINTS_LOCATION = [
+  'Is this place typically busy or quiet?',
+  'Do people dress formally or casually here?',
+  'Would children enjoy being here?',
+  'Do people usually come here alone or in groups?',
+  'Is there a specific smell associated with this place?',
+  'How long do people typically stay here?',
+  'Is food or drink available here?',
+  'Do people come here out of necessity or pleasure?',
+  'Is there a uniform or dress code here?',
+  'Does the weather affect what happens here?',
+  'Is there a lot of equipment or machinery here?',
+  'Would you find this place in a city or a rural area?',
+  'Is there a strong sense of authority or hierarchy here?',
+  'Do people pay to be here?',
+  'Is this place open 24 hours?',
+  'Would you expect strangers or familiar faces here?',
+  'Is noise a common feature here?',
+  'Do people sit or stand most of the time?',
+  'Is this place indoors or outdoors?',
+  'Is safety a major concern here?',
+  'Do people need appointments or reservations to visit?',
+  'Is this place associated with strong emotions?',
+  'Is physical activity common here?',
+  'Does this place follow a strict schedule?',
+  'Is this place associated with luxury or comfort?',
+  'Would you find art or creativity here?',
+  'Is cleanliness especially important here?',
+  'Are pets typically allowed here?',
+  'Is technology heavily used here?',
+  'Would this place have a reception or front desk?',
+  'Is this place more active at certain times of year?',
+  'Do people feel stressed or relaxed here?',
+  'Is there a sense of competition here?',
+  'Would you find medical supplies here?',
+  'Is this place associated with money or finance?',
+  'Would you need special equipment to enter?',
+  'Is this place associated with travel or transport?',
+  'Do people perform or showcase something here?',
+  'Is waiting common here?',
+  'Is this place associated with a particular age group?',
+  'Is the lighting here typically bright or dim?',
+  'Would you find books or documents here?',
+  'Is this place associated with danger or risk?',
+  'Do people come here repeatedly or just once?',
+  'Is there a stage or performance area here?',
+  'Is this place mainly for professionals?',
+  'Would you expect to find animals here?',
+  'Is this place typically crowded on weekends?',
+  'Is membership or registration required?',
+  'Would you find sleeping areas here?',
+  'Is this place associated with sport or competition?',
+  'Do people queue or wait in line here?',
+  'Is this place associated with celebration?',
+  'Would you expect to sign something before entering?',
+  'Is security or surveillance common here?',
+  'Is privacy important in this place?',
+  'Would you find music here?',
+  'Is this place associated with vehicles?',
+  'Would you see people in a hurry here?',
+  'Is outdoor space part of this place?',
+  'Would this place have a lot of signs or instructions?',
+  'Do you need identification to enter here?',
+  'Is this place associated with service or hospitality?',
+  'Would children typically need supervision here?',
+  'Is this place associated with science or research?',
+  'Is this place associated with public speaking?',
+  'Is this place free to enter or does it cost money?',
+  'Would you find a schedule displayed prominently here?',
+  'Is this place relatively small or large?',
+  'Do people whisper or speak loudly here?',
+  'Is this place associated with healing or recovery?',
+  'Would you find expensive items here?',
+  'Is this place typically visited during the day or at night?',
+  'Would you find natural light here?',
+  'Is this place associated with physical labor?',
+  'Do people leave changed from when they arrived?',
+  'Would you find multiple floors or levels here?',
+  'Is this place associated with creativity or design?',
+  'Would people be surprised to find a child working here?',
+  'Is this place usually found near water?',
+  'Is this place associated with history or culture?',
+  'Is learning a purpose of this place?',
+  'Would you find food preparation here?',
+  'Is the atmosphere here generally tense or relaxed?',
+  'Would people here be wearing protective gear?',
+  'Does this place attract tourists?',
+  'Would you find plants or nature here?',
+  'Is this place generally quiet after a certain hour?',
+  'Is cooperation or teamwork important here?',
+  'Is communication a key function of this place?',
+  'Is this place associated with legal matters?',
+  'Would you find expensive equipment here?',
+  'Is this place associated with physical training?',
+  'Is solitude common here?',
+  'Would this place be considered a landmark?',
+  'Is this place associated with a specific type of visitor?',
+  'Would you find a cash register or payment terminal here?',
+  'Is this place associated with a specific country or culture?',
+  'Is this place typically found on a main street or hidden away?',
+  'Would you find people in uniforms here?',
+  'Is this place associated with transit or waiting?',
+];
+
+const HINTS_TOPIC = [
+  'Is this more popular with beginners or experts?',
+  'Is this better known for offense or defense?',
+  'Does this work better alone or in a team?',
+  'Is this considered old or relatively new?',
+  'Is this more technical or creative?',
+  'Is this competitive or more casual?',
+  'Is this known for being fast or slow?',
+  'Is this more about strategy or raw power?',
+  'Does this have a large and active community?',
+  'Is this popular in a specific region or worldwide?',
+  'Would you describe this as aggressive or passive?',
+  'Has this changed a lot over time?',
+  'Is this known for a specific signature trait or ability?',
+  'Is this thing loved or controversial?',
+  'Would a complete newcomer recognize this?',
+  'Is this something used or enjoyed daily?',
+  'Is this mainly visual or more abstract?',
+  'Does this require a lot of practice to master?',
+  'Is this associated with a specific era or generation?',
+  'Would this be considered mainstream or niche?',
+  'Is this associated with any specific colors?',
+  'Is this primarily enjoyed alone or with others?',
+  'Is this considered easy or difficult to understand?',
+  'Has this inspired many imitators or successors?',
+  'Is this associated with a character or mascot?',
+  'Is this typically used for work or entertainment?',
+  'Is this associated with speed?',
+  'Is this known for being versatile or specialized?',
+  'Has this won any notable awards or recognition?',
+  'Is this considered cutting-edge or outdated?',
+  'Is this used more by young or older people?',
+  'Would you need training to use this?',
+  'Is this associated with a particular industry?',
+  'Is this something you can learn in a short time?',
+  'Has this had a significant impact on its field?',
+  'Is this associated with a specific aesthetic?',
+  'Is this relatively rare or very common?',
+  'Does this have a well-known rival or competitor?',
+  'Is this associated with any risks or dangers?',
+  'Is this typically better when combined with other things?',
+  'Is this free to use or does it cost something?',
+  'Is this associated with endurance or quick bursts?',
+  'Would professionals consider this essential?',
+  'Is this known by different names in different places?',
+  'Is this related to communication?',
+  'Does this require physical effort?',
+  'Is this associated with a specific culture or region?',
+  'Would this be found in a professional setting?',
+  'Has this declined in popularity recently?',
+  'Is this associated with mobility or being stationary?',
+  'Is this considered simple or complex?',
+  'Would this be used in a competition?',
+  'Is this primarily found online or in the real world?',
+  'Is this associated with storytelling?',
+  'Is this a luxury or a necessity?',
+  'Is this better known for its looks or its function?',
+  'Is this associated with leadership or following?',
+  'Is this known for a long or short history?',
+  'Does this require significant resources?',
+  'Is this considered a classic in its category?',
+  'Is this associated with a specific number or statistic?',
+  'Has this been adapted into other formats or media?',
+  'Is this best experienced in person or digitally?',
+  'Is this known for being reliable or unpredictable?',
+  'Is this typically recommended for beginners?',
+  'Is this associated with a specific company or creator?',
+  'Does this have a passionate fanbase?',
+  'Is this more focused on offense or utility?',
+  'Is this considered overpowered or balanced?',
+  'Is this associated with a major event or release?',
+  'Is this a foundation or a specialization?',
+  'Is this better known in one medium than others?',
+  'Is this associated with a surprising or unexpected use?',
+  'Would this be considered underrated or overrated?',
+  'Is this thing known for its longevity?',
+  'Is this associated with specific seasons or time periods?',
+  'Is this considered easy to counter or difficult?',
+  'Is this known for high or low maintenance?',
+  'Is this currently trending or fading?',
+  'Would a newcomer find this intimidating?',
+  'Is this known for evolving or staying the same?',
+  'Is this more fun or more frustrating?',
+  'Does this have a strong visual identity?',
+  'Is this primarily used for attack or support?',
+  'Is this associated with precision or brute force?',
+  'Would this appear in a tutorial or advanced content?',
+  'Is this associated with a famous person or creator?',
+  'Is this known for being beginner-friendly?',
+  'Is this associated with a specific play style?',
+  'Is this more of a short-term or long-term investment?',
+  'Would experts debate whether this is good or bad?',
+  'Is this associated with a transformation or evolution?',
+  'Is this used early or late in a game or process?',
+  'Is this associated with a specific role or function?',
+  'Would this be found in a ranked or casual setting?',
+  'Is this known for being consistent or unpredictable?',
+  'Does this have a signature move or feature?',
+  'Is this associated with defense or escape?',
+  'Is this considered a counter to something else?',
+  'Is this a specialty or a general-purpose thing?',
+];
+
 // ─── Global click sound + ambient bootstrap ────────────────────────────────────
 let _ambientStarted = false;
 document.addEventListener('click', (e) => {
@@ -138,6 +346,7 @@ const state = {
   pendingNumSpies: null,
   pendingMaxPlayers: null,
   notebook: new Set(),
+  hintState: null,
 };
 
 // ─── Socket ───────────────────────────────────────────────────────────────────
@@ -176,8 +385,11 @@ function connectSocket() {
     state.roomState = roomState;
     state.hasRaisedHand = false;
     state.notebook = new Set();
+    initHints();
     document.getElementById('notebook-panel')?.classList.remove('open');
     document.getElementById('btn-notebook')?.classList.remove('btn-notebook-active');
+    document.getElementById('hint-panel')?.classList.add('hidden');
+    document.getElementById('btn-hints')?.classList.remove('btn-notebook-active');
     showScreen('playing');
     renderPlayingScreen();
     resetRoleReveal();
@@ -306,6 +518,10 @@ function connectSocket() {
     document.getElementById('spy-guess-modal').classList.add('hidden');
     document.getElementById('notebook-panel')?.classList.remove('open');
     document.getElementById('btn-notebook')?.classList.remove('btn-notebook-active');
+    if (state.hintState?.interval) clearInterval(state.hintState.interval);
+    document.getElementById('hint-panel')?.classList.add('hidden');
+    document.getElementById('btn-hints')?.classList.remove('btn-notebook-active');
+    if (result.roomState) state.roomState = result.roomState;
     result.spyCaught ? SFX.caught() : SFX.escaped();
     renderResultsScreen(result);
     showScreen('results');
@@ -695,6 +911,74 @@ function tickLocation(name) {
   renderNotebook();
 }
 
+// ─── Hints ─────────────────────────────────────────────────────────────────────
+function initHints() {
+  if (state.hintState?.interval) clearInterval(state.hintState.interval);
+  const shuffle = arr => arr.sort(() => Math.random() - 0.5);
+  state.hintState = {
+    type: 'location',
+    locPool: shuffle([...Array(HINTS_LOCATION.length).keys()]),
+    topPool: shuffle([...Array(HINTS_TOPIC.length).keys()]),
+    locPtr: 0,
+    topPtr: 0,
+    cooldownEnd: 0,
+    currentHint: null,
+    interval: null,
+  };
+}
+
+function requestHint() {
+  const hs = state.hintState;
+  if (!hs || Date.now() < hs.cooldownEnd) return;
+  const isLoc = hs.type === 'location';
+  const pool = isLoc ? hs.locPool : hs.topPool;
+  const hints = isLoc ? HINTS_LOCATION : HINTS_TOPIC;
+  const ptr = isLoc ? hs.locPtr : hs.topPtr;
+  hs.currentHint = hints[pool[ptr % pool.length]];
+  if (isLoc) hs.locPtr++; else hs.topPtr++;
+  hs.cooldownEnd = Date.now() + 5000;
+  renderHintPanel();
+  startHintCountdown();
+}
+
+function startHintCountdown() {
+  const hs = state.hintState;
+  if (!hs) return;
+  if (hs.interval) clearInterval(hs.interval);
+  hs.interval = setInterval(() => {
+    const rem = Math.ceil((hs.cooldownEnd - Date.now()) / 1000);
+    const cd = document.getElementById('hint-countdown');
+    const btn = document.getElementById('btn-get-hint');
+    if (rem > 0) {
+      if (cd) cd.textContent = `next in ${rem}s`;
+      if (btn) { btn.disabled = true; btn.textContent = 'WAIT'; }
+    } else {
+      if (cd) cd.textContent = '';
+      if (btn) { btn.disabled = false; btn.textContent = 'GET HINT'; }
+      clearInterval(hs.interval);
+      hs.interval = null;
+    }
+  }, 250);
+}
+
+function renderHintPanel() {
+  const hs = state.hintState;
+  const text = document.getElementById('hint-text');
+  if (text) text.textContent = hs?.currentHint || '';
+  document.querySelectorAll('.hint-tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.hintType === hs?.type)
+  );
+}
+
+function toggleHintPanel() {
+  const panel = document.getElementById('hint-panel');
+  const btn = document.getElementById('btn-hints');
+  if (!panel) return;
+  const opening = panel.classList.contains('hidden');
+  panel.classList.toggle('hidden', !opening);
+  btn?.classList.toggle('btn-notebook-active', opening);
+}
+
 function renderTimer() {
   const t = state.timerRemaining;
   const text = document.getElementById('timer-text');
@@ -776,6 +1060,31 @@ function renderResultsScreen(result) {
       <span>${esc(a.playerName)}</span>${!a.isSpy ? ` · ${esc(a.role)}` : ' · 🕵️ SPY'}
     </div>
   `).join('');
+
+  // Vote breakdown
+  const vbEl = document.getElementById('vote-breakdown');
+  if (result.voteTally && result.voteTally.length > 0) {
+    vbEl.classList.remove('hidden');
+    vbEl.innerHTML =
+      '<div class="section-label" style="margin-bottom:0.5rem">VOTES</div>' +
+      result.voteTally.map(e =>
+        `<div class="vote-tally-row ${e.isSpy ? 'voted-spy' : ''}">
+          <span class="vote-tally-name">${esc(e.name)}${e.isSpy ? ' [SPY]' : ''}</span>
+          <span class="vote-tally-count">${e.votes} vote${e.votes !== 1 ? 's' : ''}</span>
+        </div>`
+      ).join('') +
+      '<div class="vote-breakdown-detail">' +
+      (result.voteBreakdown || []).map(v =>
+        `<div class="vote-detail-row">
+          <span class="vdr-voter">${esc(v.voterName)}</span>
+          <span class="vdr-arrow">→</span>
+          <span class="vdr-target ${v.votedForSpy ? 'correct-vote' : ''}">${esc(v.votedForName)}</span>
+        </div>`
+      ).join('') +
+      '</div>';
+  } else {
+    vbEl.classList.add('hidden');
+  }
 
   // Results scoreboard
   const rsScores = state.roomState?.scores || [];
@@ -1368,6 +1677,13 @@ function setupListeners() {
 
   // Notebook
   document.getElementById('btn-notebook').onclick = toggleNotebook;
+  document.getElementById('btn-hints').onclick = toggleHintPanel;
+  document.getElementById('btn-get-hint').onclick = requestHint;
+  document.querySelectorAll('.hint-tab').forEach(tab => {
+    tab.onclick = () => {
+      if (state.hintState) { state.hintState.type = tab.dataset.hintType; renderHintPanel(); }
+    };
+  });
 
   // Location info modal close
   document.getElementById('loc-info-close').onclick = () =>
