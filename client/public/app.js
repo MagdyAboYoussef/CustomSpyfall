@@ -1386,10 +1386,15 @@ function setupListeners() {
     document.getElementById('about-modal').classList.add('hidden');
 
   // Sound toggle
-  document.getElementById('btn-sound-toggle').onclick = () => {
-    const muted = SFX.toggleMute();
-    document.getElementById('btn-sound-toggle').textContent = muted ? '🔇' : '🔊';
-  };
+  document.querySelectorAll('.btn-sound-toggle').forEach(btn => {
+    btn.onclick = () => {
+      const muted = SFX.toggleMute();
+      document.querySelectorAll('.btn-sound-toggle').forEach(b => {
+        b.textContent = muted ? 'UNMUTE' : 'MUTE';
+        b.classList.toggle('muted', muted);
+      });
+    };
+  });
 
   // Chat inputs
   setupChatInput('chat-input', 'btn-send-chat', 'all');
