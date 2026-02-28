@@ -75,13 +75,29 @@ class GameManager {
   joinRoom(code, socketId, name, asSpectator = false) {
     const room = this.rooms.get(code);
     if (!room) return { error: 'Room not found' };
+
+    const existingPlayer = !asSpectator && room.players.find(p => p.name.toLowerCase() === name.toLowerCase());
+
+    // Allow a disconnected player to rejoin using their original name
+    if (existingPlayer && !existingPlayer.connected) {
+      const oldSocketId = existingPlayer.id;
+      existingPlayer.id = socketId;
+      existingPlayer.connected = true;
+      if (existingPlayer.isHost) room.hostSocketId = socketId;
+      if (room.currentRound) {
+        const assignment = room.currentRound.assignments.find(a => a.playerId === oldSocketId);
+        if (assignment) assignment.playerId = socketId;
+        const qIdx = room.currentRound.questionOrder.indexOf(oldSocketId);
+        if (qIdx !== -1) room.currentRound.questionOrder[qIdx] = socketId;
+      }
+      return { room, asSpectator: false, reconnected: true };
+    }
+
+    if (existingPlayer && existingPlayer.connected) return { error: 'Name already taken' };
     if (room.phase !== PHASES.LOBBY && !asSpectator) return { error: 'Game already in progress. Join as spectator?' };
     if (!asSpectator && room.maxPlayers > 0 && room.players.filter(p => p.connected).length >= room.maxPlayers) {
       return { error: `Room is full (max ${room.maxPlayers} players)` };
     }
-
-    const existingPlayer = room.players.find(p => p.name.toLowerCase() === name.toLowerCase());
-    if (existingPlayer) return { error: 'Name already taken' };
 
     if (asSpectator) {
       room.spectators.push({ id: socketId, name, connected: true });
@@ -123,9 +139,17 @@ class GameManager {
     if (!room) return { error: 'Room not found' };
     const player = room.players.find(p => p.name === name);
     if (!player) return { error: 'Player not found' };
+    const oldSocketId = player.id;
     player.id = socketId;
     player.connected = true;
     if (player.isHost) room.hostSocketId = socketId;
+    // Update round references so role reveal and turn tracking still work
+    if (room.currentRound) {
+      const assignment = room.currentRound.assignments.find(a => a.playerId === oldSocketId);
+      if (assignment) assignment.playerId = socketId;
+      const qIdx = room.currentRound.questionOrder.indexOf(oldSocketId);
+      if (qIdx !== -1) room.currentRound.questionOrder[qIdx] = socketId;
+    }
     return { room, player };
   }
 
@@ -247,6 +271,23 @@ class GameManager {
     room.handRaises.delete(socketId);
     const player = room.players.find(p => p.id === socketId);
     return { playerName: player?.name, count: room.handRaises.size };
+  }
+
+  grantTurn(code, hostSocketId, targetId) {
+    const room = this.rooms.get(code);
+    if (!room || room.phase !== PHASES.PLAYING) return { error: 'Invalid state' };
+    if (room.hostSocketId !== hostSocketId) return { error: 'Only host can grant turn' };
+
+    const round = room.currentRound;
+    const idx = round.questionOrder.indexOf(targetId);
+    if (idx === -1) return { error: 'Player not in question order' };
+
+    round.currentQuestionerIndex = idx;
+    round.questionTarget = null;
+    room.handRaises.delete(targetId);
+
+    const player = room.players.find(p => p.id === targetId);
+    return { nextQuestionerId: targetId, nextQuestionerName: player?.name };
   }
 
   startVoting(code, socketId) {
@@ -393,6 +434,38 @@ class GameManager {
     return { kicked, room };
   }
 
+  becomePlayer(code, socketId) {
+    const room = this.rooms.get(code);
+    if (!room) return { error: 'Room not found' };
+    if (room.phase !== PHASES.LOBBY) return { error: 'Can only switch roles in lobby' };
+
+    const specIdx = room.spectators.findIndex(s => s.id === socketId);
+    if (specIdx === -1) return { error: 'Not a spectator' };
+
+    if (room.maxPlayers > 0 && room.players.filter(p => p.connected).length >= room.maxPlayers) {
+      return { error: `Room is full (max ${room.maxPlayers} players)` };
+    }
+
+    const spec = room.spectators.splice(specIdx, 1)[0];
+    room.players.push({ id: spec.id, name: spec.name, isHost: false, isSpectator: false, connected: true });
+    return { room };
+  }
+
+  becomeSpectator(code, socketId) {
+    const room = this.rooms.get(code);
+    if (!room) return { error: 'Room not found' };
+    if (room.phase !== PHASES.LOBBY) return { error: 'Can only switch roles in lobby' };
+
+    const playerIdx = room.players.findIndex(p => p.id === socketId);
+    if (playerIdx === -1) return { error: 'Not a player' };
+    if (room.players[playerIdx].isHost) return { error: 'Host cannot become spectator' };
+
+    const player = room.players.splice(playerIdx, 1)[0];
+    delete room.scores[player.name];
+    room.spectators.push({ id: player.id, name: player.name, connected: true });
+    return { room };
+  }
+
   addChat(code, socketId, message) {
     const room = this.rooms.get(code);
     if (!room) return null;
@@ -455,7 +528,7 @@ class GameManager {
       chat: room.chat.slice(-50),
       handRaises: room.phase === PHASES.PLAYING ? Array.from(room.handRaises).map(id => {
         const p = room.players.find(pl => pl.id === id);
-        return p?.name;
+        return p ? { id: p.id, name: p.name } : null;
       }).filter(Boolean) : [],
       currentQuestioner: room.currentRound
         ? room.players.find(p => p.id === room.currentRound.questionOrder[room.currentRound.currentQuestionerIndex])?.name
@@ -464,7 +537,7 @@ class GameManager {
         ? room.players.find(p => p.id === room.currentRound.questionTarget)?.name
         : null,
       votes: room.phase === PHASES.VOTING
-        ? { count: Object.keys(room.votes).length, total: room.players.filter(p => p.connected).length }
+        ? { count: Object.keys(room.votes).length, total: room.players.filter(p => p.connected).length, votedIds: Object.keys(room.votes) }
         : null,
       locations: room.locations.map(l => l.Location),
       numSpies: room.numSpies,

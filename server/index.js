@@ -101,16 +101,25 @@ io.on('connection', (socket) => {
     socket.join(code.toUpperCase());
     socket.data.roomCode = code.toUpperCase();
     socket.data.name = name;
-    socket.data.isSpectator = asSpectator;
+    socket.data.isSpectator = result.asSpectator;
 
-    const roomState = gameManager.getPublicRoomState(result.room);
-    cb({ success: true, roomState });
+    const room = gameManager.rooms.get(code.toUpperCase());
+    const roomState = gameManager.getPublicRoomState(room);
+
+    // If reconnecting mid-game, send private role info
+    let privateInfo = null;
+    if (result.reconnected && room.phase === PHASES.PLAYING && room.currentRound) {
+      const assignment = room.currentRound.assignments.find(a => a.playerId === socket.id);
+      if (assignment) privateInfo = { isSpy: assignment.isSpy, location: assignment.location, role: assignment.role };
+    }
+
+    cb({ success: true, roomState, privateInfo });
     socket.to(code.toUpperCase()).emit('player-joined', {
       name,
-      isSpectator: asSpectator,
+      isSpectator: result.asSpectator,
       roomState
     });
-    console.log(`[Room ${code}] ${name} joined (spectator: ${asSpectator})`);
+    console.log(`[Room ${code}] ${name} joined${result.reconnected ? ' (reconnected)' : ''} (spectator: ${result.asSpectator})`);
   });
 
   // Reconnect
@@ -234,6 +243,21 @@ io.on('connection', (socket) => {
     cb?.({ success: true });
   });
 
+  // Grant turn (host only)
+  socket.on('grant-turn', ({ targetId }, cb) => {
+    const code = socket.data.roomCode;
+    const result = gameManager.grantTurn(code, socket.id, targetId);
+    if (result.error) return cb?.({ success: false, error: result.error });
+
+    const room = gameManager.rooms.get(code);
+    io.to(code).emit('turn-advanced', {
+      ...result,
+      granted: true,
+      roomState: gameManager.getPublicRoomState(room)
+    });
+    cb?.({ success: true });
+  });
+
   // Reset scores
   socket.on('reset-scores', (_, cb) => {
     const code = socket.data.roomCode;
@@ -341,6 +365,43 @@ io.on('connection', (socket) => {
     cb?.({ success: true });
   });
 
+  // Become player (spectator → player)
+  socket.on('become-player', (_, cb) => {
+    const code = socket.data.roomCode;
+    const result = gameManager.becomePlayer(code, socket.id);
+    if (result.error) return cb?.({ success: false, error: result.error });
+
+    socket.data.isSpectator = false;
+    io.to(code).emit('room-settings-updated', { roomState: gameManager.getPublicRoomState(result.room) });
+    cb?.({ success: true });
+  });
+
+  // Become spectator (player → spectator)
+  socket.on('become-spectator', (_, cb) => {
+    const code = socket.data.roomCode;
+    const result = gameManager.becomeSpectator(code, socket.id);
+    if (result.error) return cb?.({ success: false, error: result.error });
+
+    socket.data.isSpectator = true;
+    io.to(code).emit('room-settings-updated', { roomState: gameManager.getPublicRoomState(result.room) });
+    cb?.({ success: true });
+  });
+
+  // Host advance turn (skip current player without their input)
+  socket.on('host-advance-turn', (_, cb) => {
+    const code = socket.data.roomCode;
+    const room = gameManager.rooms.get(code);
+    if (!room) return cb?.({ success: false, error: 'Room not found' });
+    if (room.hostSocketId !== socket.id) return cb?.({ success: false, error: 'Only host can advance turn' });
+    if (room.phase !== PHASES.PLAYING) return cb?.({ success: false, error: 'Not in playing phase' });
+
+    const result = gameManager.advanceTurn(code);
+    if (result.error) return cb?.({ success: false, error: result.error });
+
+    io.to(code).emit('turn-advanced', { ...result, roomState: gameManager.getPublicRoomState(room) });
+    cb?.({ success: true });
+  });
+
   // Chat
   socket.on('chat-message', ({ message }, cb) => {
     const code = socket.data.roomCode;
@@ -362,16 +423,19 @@ io.on('connection', (socket) => {
     cb?.({ success: true });
   });
 
-  // Update timer setting (lobby only)
-  socket.on('update-timer', ({ timerSeconds }, cb) => {
+  // Update room settings (timer, spies, max players) — lobby only, host only
+  socket.on('update-room-settings', ({ timerSeconds, numSpies, maxPlayers }, cb) => {
     const code = socket.data.roomCode;
     const room = gameManager.rooms.get(code);
-    if (!room) return cb?.({ success: false });
+    if (!room) return cb?.({ success: false, error: 'Room not found' });
     if (room.hostSocketId !== socket.id) return cb?.({ success: false, error: 'Not host' });
     if (room.phase !== PHASES.LOBBY) return cb?.({ success: false, error: 'Game in progress' });
 
-    room.timerSeconds = Math.max(60, Math.min(3600, timerSeconds));
-    io.to(code).emit('timer-updated', { timerSeconds: room.timerSeconds, roomState: gameManager.getPublicRoomState(room) });
+    if (typeof timerSeconds === 'number') room.timerSeconds = Math.max(60, Math.min(3600, timerSeconds));
+    if (typeof numSpies === 'number') room.numSpies = Math.max(1, Math.min(3, numSpies));
+    if (typeof maxPlayers === 'number') room.maxPlayers = Math.max(0, maxPlayers);
+
+    io.to(code).emit('room-settings-updated', { roomState: gameManager.getPublicRoomState(room) });
     cb?.({ success: true });
   });
 
