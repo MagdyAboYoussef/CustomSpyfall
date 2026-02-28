@@ -1074,13 +1074,21 @@ function renderResultsScreen(result) {
         </div>`
       ).join('') +
       '<div class="vote-breakdown-detail">' +
-      (result.voteBreakdown || []).map(v =>
-        `<div class="vote-detail-row">
+      (result.voteBreakdown || []).map(v => {
+        if (v.skipped) {
+          return `<div class="vote-detail-row">
+            <span class="vdr-voter">${esc(v.voterName)}</span>
+            <span class="vdr-verdict skipped">skipped</span>
+          </div>`;
+        }
+        const cls = v.votedForSpy ? 'correct' : 'incorrect';
+        const label = v.votedForSpy ? 'Correct' : 'Incorrect';
+        return `<div class="vote-detail-row">
           <span class="vdr-voter">${esc(v.voterName)}</span>
-          <span class="vdr-arrow">→</span>
-          <span class="vdr-target ${v.votedForSpy ? 'correct-vote' : ''}">${esc(v.votedForName)}</span>
-        </div>`
-      ).join('') +
+          <span class="vdr-text">voted <strong>${esc(v.votedForName)}</strong></span>
+          <span class="vdr-verdict ${cls}">${label}</span>
+        </div>`;
+      }).join('') +
       '</div>';
   } else {
     vbEl.classList.add('hidden');

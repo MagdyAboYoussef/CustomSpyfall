@@ -342,11 +342,12 @@ class GameManager {
 
     const spyIdSet = new Set(room.currentRound.spies);
 
-    // Build vote breakdown (who voted for whom)
-    const voteBreakdown = Object.entries(room.votes).map(([voterId, targetId]) => {
-      const voter = room.players.find(p => p.id === voterId);
-      const voted = room.players.find(p => p.id === targetId);
-      return { voterName: voter?.name || '?', votedForName: voted?.name || '?', votedForSpy: spyIdSet.has(targetId) };
+    // Build vote breakdown (all connected players, including those who skipped)
+    const voteBreakdown = room.players.filter(p => p.connected).map(p => {
+      const targetId = room.votes[p.id];
+      if (!targetId) return { voterName: p.name, votedForName: null, votedForSpy: false, skipped: true };
+      const voted = room.players.find(pl => pl.id === targetId);
+      return { voterName: p.name, votedForName: voted?.name || '?', votedForSpy: spyIdSet.has(targetId), skipped: false };
     });
 
     const voteTally = Object.entries(tally).map(([id, count]) => {
