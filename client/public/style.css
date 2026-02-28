@@ -1128,9 +1128,9 @@ input[type="text"]:focus, input[type="number"]:focus {
 .nb-tab {
   font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.15em;
   background: none; border: none; border-bottom: 2px solid transparent;
-  color: var(--text-muted); cursor: pointer; padding: 0 0 0.15rem; transition: all 0.15s;
+  color: #4da6ff; cursor: pointer; padding: 0 0 0.15rem; transition: all 0.15s;
 }
-.nb-tab:hover { color: var(--text); }
+.nb-tab:hover { color: #80c4ff; }
 .nb-tab.active { color: var(--amber); border-bottom-color: var(--amber); }
 .nb-panel-hint { color: var(--text-muted); font-size: 0.55rem; }
 .nb-close-btn {
@@ -1144,11 +1144,11 @@ input[type="text"]:focus, input[type="number"]:focus {
 }
 .nb-chip {
   font-family: var(--font-mono); font-size: 0.7rem; padding: 0.2rem 0.55rem;
-  border: 1px solid #4da6ff; background: var(--surface2); color: #4da6ff;
+  border: 1px solid var(--border); background: var(--surface2); color: var(--text-dim);
   cursor: pointer; user-select: none; transition: all 0.1s;
 }
-.nb-chip:hover { border-color: #80c4ff; color: #80c4ff; }
-.nb-chip.ticked { color: var(--amber); border-color: var(--amber); text-decoration: line-through; opacity: 0.55; }
+.nb-chip:hover { border-color: var(--amber); color: var(--text); }
+.nb-chip.ticked { opacity: 0.32; text-decoration: line-through; border-color: transparent; }
 .btn-notebook-active { border-color: var(--amber) !important; color: var(--amber) !important; }
 
 /* ─── Result outcome description ─────────────────────────────────────────── */
