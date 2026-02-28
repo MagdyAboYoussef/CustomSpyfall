@@ -337,6 +337,11 @@ input[type="text"]:focus, input[type="number"]:focus {
   font-size: 1.2rem; cursor: pointer;
 }
 .chat-input-wrap button:hover { color: white; }
+.btn-clear-chat {
+  color: #4da6ff !important; font-size: 0.85rem !important;
+  padding: 0 0.75rem !important; border-left: 1px solid var(--border) !important;
+}
+.btn-clear-chat:hover { color: #80c4ff !important; }
 
 /* ─── Lobby ───────────────────────────────────────────────────────────────── */
 .lobby-header {

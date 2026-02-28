@@ -1927,6 +1927,11 @@ function setupListeners() {
   setupChatInput('chat-input', 'btn-send-chat', 'all');
   setupChatInput('chat-input-play', 'btn-send-chat-play', 'play');
   setupChatInput('chat-input-vote', 'btn-send-chat-vote', 'vote');
+
+  [['btn-clear-chat', 'chat-messages'], ['btn-clear-chat-play', 'chat-messages-play'], ['btn-clear-chat-vote', 'chat-messages-vote']].forEach(([btnId, msgId]) => {
+    const btn = document.getElementById(btnId);
+    if (btn) btn.onclick = () => { const el = document.getElementById(msgId); if (el) el.innerHTML = ''; };
+  });
 }
 
 function setupChatInput(inputId, btnId, panel) {
