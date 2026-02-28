@@ -551,6 +551,13 @@ input[type="text"]:focus, input[type="number"]:focus {
 }
 .voting-sub { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim); margin: 0.25rem 0; }
 .vote-progress { font-family: var(--font-mono); font-size: 0.8rem; margin-top: 0.5rem; }
+.vote-countdown {
+  font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700;
+  color: var(--text-dim); margin-top: 0.35rem; letter-spacing: 0.05em;
+  transition: color 0.3s;
+}
+.vote-countdown-urgent { color: var(--red); animation: vote-blink 0.7s ease-in-out infinite alternate; }
+@keyframes vote-blink { 0% { opacity: 1; } 100% { opacity: 0.45; } }
 
 .voting-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.75rem;
@@ -962,3 +969,45 @@ input[type="text"]:focus, input[type="number"]:focus {
 .toast.fade-out { animation: toast-out 0.3s ease forwards; }
 @keyframes toast-in  { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes toast-out { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-8px); } }
+
+/* ─── Guess countdown ─────────────────────────────────────────────────────── */
+.guess-countdown {
+  font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700;
+  color: var(--text-dim); margin-bottom: 0.75rem; letter-spacing: 0.05em;
+  text-align: center; transition: color 0.3s; min-height: 1.4em;
+}
+
+/* ─── Ready-to-vote section ───────────────────────────────────────────────── */
+.vote-ready-section {
+  display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+  padding: 0.6rem 0.75rem; background: var(--surface2);
+  border: 1px solid var(--border);
+}
+.vote-ready-section.hidden { display: none !important; }
+.vote-ready-status {
+  font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);
+  letter-spacing: 0.05em; flex: 1;
+}
+.btn-ready-vote {
+  font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.1em;
+  padding: 0.4rem 1rem; background: transparent;
+  border: 1px solid var(--amber); color: var(--amber); cursor: pointer;
+  transition: all 0.15s; text-transform: uppercase;
+}
+.btn-ready-vote:hover { background: rgba(245,166,35,0.12); }
+.btn-ready-vote.is-ready { background: rgba(245,166,35,0.18); }
+.player-tile-ready {
+  position: absolute; top: 0.3rem; left: 0.3rem;
+  font-size: 0.55rem; color: var(--green); line-height: 1;
+}
+
+/* ─── Notebook modal ──────────────────────────────────────────────────────── */
+.notebook-content { max-width: 380px; }
+.nb-list { display: flex; flex-direction: column; max-height: 60vh; overflow-y: auto; }
+.nb-location {
+  font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-dim);
+  padding: 0.45rem 0.6rem; cursor: pointer; border-bottom: 1px solid var(--border);
+  transition: background 0.1s, color 0.1s; user-select: none;
+}
+.nb-location:hover { background: var(--surface2); color: var(--text); }
+.nb-location.ticked { opacity: 0.38; text-decoration: line-through; }

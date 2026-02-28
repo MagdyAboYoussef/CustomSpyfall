@@ -286,12 +286,14 @@ io.on('connection', (socket) => {
     const result = gameManager.startVoting(code, socket.id);
     if (result.error) return cb?.({ success: false, error: result.error });
 
-    // Stop timer
+    // Stop game timer, start vote timer
     stopTimer(code);
 
     io.to(code).emit('voting-started', {
       roomState: gameManager.getPublicRoomState(result.room)
     });
+
+    startVoteTimer(code);
     cb?.({ success: true });
   });
 
@@ -309,12 +311,10 @@ io.on('connection', (socket) => {
     });
 
     if (result.allVoted) {
+      stopVoteTimer(code);
       const resolution = gameManager.resolveVotes(code);
-      if (resolution.awaitingSpyGuess) {
-        io.to(code).emit('spy-guess-prompt', { ...resolution, roomState: gameManager.getPublicRoomState(room) });
-      } else {
-        io.to(code).emit('game-over', { ...resolution, roomState: gameManager.getPublicRoomState(room) });
-      }
+      io.to(code).emit('spy-guess-prompt', { ...resolution, roomState: gameManager.getPublicRoomState(room) });
+      startGuessTimer(code);
     }
 
     cb?.({ success: true });
@@ -327,12 +327,10 @@ io.on('connection', (socket) => {
     if (!room || room.hostSocketId !== socket.id) return cb?.({ success: false, error: 'Not host' });
     if (room.phase !== PHASES.VOTING) return cb?.({ success: false, error: 'Not in voting phase' });
 
+    stopVoteTimer(code);
     const resolution = gameManager.resolveVotes(code);
-    if (resolution.awaitingSpyGuess) {
-      io.to(code).emit('spy-guess-prompt', { ...resolution, roomState: gameManager.getPublicRoomState(room) });
-    } else {
-      io.to(code).emit('game-over', { ...resolution, roomState: gameManager.getPublicRoomState(room) });
-    }
+    io.to(code).emit('spy-guess-prompt', { ...resolution, roomState: gameManager.getPublicRoomState(room) });
+    startGuessTimer(code);
     cb?.({ success: true });
   });
 
@@ -342,6 +340,7 @@ io.on('connection', (socket) => {
     const result = gameManager.submitSpyGuess(code, socket.id, guessedLocation);
     if (result.error) return cb?.({ success: false, error: result.error });
 
+    stopGuessTimer(code);
     const room = gameManager.rooms.get(code);
     io.to(code).emit('game-over', { ...result, roomState: gameManager.getPublicRoomState(room) });
     cb?.({ success: true });
@@ -416,6 +415,8 @@ io.on('connection', (socket) => {
   socket.on('reset-room', (_, cb) => {
     const code = socket.data.roomCode;
     stopTimer(code);
+    stopVoteTimer(code);
+    stopGuessTimer(code);
     const result = gameManager.resetRoom(code, socket.id);
     if (result.error) return cb?.({ success: false, error: result.error });
 
@@ -439,6 +440,36 @@ io.on('connection', (socket) => {
     cb?.({ success: true });
   });
 
+  // Ready to vote
+  socket.on('ready-to-vote', (_, cb) => {
+    const code = socket.data.roomCode;
+    const result = gameManager.markReadyToVote(code, socket.id);
+    if (result.error) return cb?.({ success: false, error: result.error });
+
+    if (result.autoStart) {
+      const room = result.room;
+      gameManager.startVoting(code, room.hostSocketId);
+      stopTimer(code);
+      io.to(code).emit('voting-started', {
+        roomState: gameManager.getPublicRoomState(room),
+        reason: 'Agents ready — vote begins!'
+      });
+      startVoteTimer(code);
+    } else {
+      io.to(code).emit('vote-ready-updated', { roomState: gameManager.getPublicRoomState(result.room) });
+    }
+    cb?.({ success: true });
+  });
+
+  // Unready to vote
+  socket.on('unready-to-vote', (_, cb) => {
+    const code = socket.data.roomCode;
+    const result = gameManager.unmarkReadyToVote(code, socket.id);
+    if (result.error) return cb?.({ success: false, error: result.error });
+    io.to(code).emit('vote-ready-updated', { roomState: gameManager.getPublicRoomState(result.room) });
+    cb?.({ success: true });
+  });
+
   // Disconnect
   socket.on('disconnect', () => {
     const result = gameManager.leaveRoom(socket.id);
@@ -454,6 +485,82 @@ io.on('connection', (socket) => {
 // ─── Timer Management ─────────────────────────────────────────────────────────
 
 const timers = new Map();
+const voteTimers = new Map();
+const guessTimers = new Map();
+
+const VOTE_DURATION = 30;
+const GUESS_DURATION = 30;
+
+function startVoteTimer(code) {
+  stopVoteTimer(code);
+  let timeLeft = VOTE_DURATION;
+  io.to(code).emit('vote-timer-tick', { timeRemaining: timeLeft });
+
+  const interval = setInterval(() => {
+    const r = gameManager.rooms.get(code);
+    if (!r || r.phase !== PHASES.VOTING) { clearInterval(interval); voteTimers.delete(code); return; }
+
+    timeLeft--;
+    io.to(code).emit('vote-timer-tick', { timeRemaining: timeLeft });
+
+    if (timeLeft <= 0) {
+      clearInterval(interval);
+      voteTimers.delete(code);
+      const resolution = gameManager.resolveVotes(code);
+      io.to(code).emit('spy-guess-prompt', { ...resolution, roomState: gameManager.getPublicRoomState(r) });
+      startGuessTimer(code);
+    }
+  }, 1000);
+
+  voteTimers.set(code, interval);
+}
+
+function stopVoteTimer(code) {
+  if (voteTimers.has(code)) {
+    clearInterval(voteTimers.get(code));
+    voteTimers.delete(code);
+  }
+}
+
+function startGuessTimer(code) {
+  stopGuessTimer(code);
+  let timeLeft = GUESS_DURATION;
+  io.to(code).emit('guess-timer-tick', { timeRemaining: timeLeft });
+
+  const interval = setInterval(() => {
+    const r = gameManager.rooms.get(code);
+    if (!r || r.phase !== PHASES.SPY_GUESS) { clearInterval(interval); guessTimers.delete(code); return; }
+
+    timeLeft--;
+    io.to(code).emit('guess-timer-tick', { timeRemaining: timeLeft });
+
+    if (timeLeft <= 0) {
+      clearInterval(interval);
+      guessTimers.delete(code);
+      r.phase = PHASES.RESULTS;
+      io.to(code).emit('game-over', {
+        spyCaught: r.currentRound?.spyCaught ?? false,
+        awaitingSpyGuess: false,
+        guessedLocation: null,
+        guessCorrect: false,
+        spyNames: r.currentRound?.spyNames,
+        location: r.currentRound?.location,
+        assignments: r.currentRound?.assignments,
+        players: r.players,
+        roomState: gameManager.getPublicRoomState(r)
+      });
+    }
+  }, 1000);
+
+  guessTimers.set(code, interval);
+}
+
+function stopGuessTimer(code) {
+  if (guessTimers.has(code)) {
+    clearInterval(guessTimers.get(code));
+    guessTimers.delete(code);
+  }
+}
 
 function startTimer(code) {
   stopTimer(code);
@@ -478,6 +585,7 @@ function startTimer(code) {
         roomState: gameManager.getPublicRoomState(r),
         reason: 'Time is up!'
       });
+      startVoteTimer(code);
     }
   }, 1000);
 

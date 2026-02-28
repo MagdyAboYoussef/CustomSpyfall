@@ -134,6 +134,7 @@ const state = {
   pendingTimerSec: null,
   pendingNumSpies: null,
   pendingMaxPlayers: null,
+  notebook: new Set(),
 };
 
 // ─── Socket ───────────────────────────────────────────────────────────────────
@@ -171,6 +172,7 @@ function connectSocket() {
   socket.on('game-started', ({ roomState }) => {
     state.roomState = roomState;
     state.hasRaisedHand = false;
+    state.notebook = new Set();
     showScreen('playing');
     renderPlayingScreen();
     resetRoleReveal();
@@ -229,9 +231,19 @@ function connectSocket() {
     state.hasVoted = false;
     showScreen('voting');
     renderVotingScreen();
+    const cd = document.getElementById('vote-countdown');
+    if (cd) cd.textContent = '30s';
     SFX.yourTurn();
     if (reason) addSystemChat('vote', reason);
-    addSystemChat('vote', 'Voting phase started!');
+    addSystemChat('vote', 'Voting phase started! 30 seconds to vote.');
+  });
+
+  socket.on('vote-timer-tick', ({ timeRemaining }) => {
+    const cd = document.getElementById('vote-countdown');
+    if (cd) {
+      cd.textContent = `${timeRemaining}s`;
+      cd.classList.toggle('vote-countdown-urgent', timeRemaining <= 10);
+    }
   });
 
   socket.on('vote-cast', ({ voteCount, total, roomState }) => {
@@ -240,13 +252,37 @@ function connectSocket() {
     document.getElementById('vote-progress').textContent = `${voteCount} / ${total} voted`;
   });
 
+  socket.on('vote-ready-updated', ({ roomState }) => updateRoomState(roomState));
+
+  socket.on('guess-timer-tick', ({ timeRemaining }) => {
+    const cd = document.getElementById('guess-countdown');
+    if (cd) {
+      cd.textContent = `${timeRemaining}s`;
+      cd.classList.toggle('vote-countdown-urgent', timeRemaining <= 10);
+    }
+  });
+
   socket.on('spy-guess-prompt', (data) => {
     const isSpy = state.privateInfo?.isSpy;
     const modal = document.getElementById('spy-guess-modal');
     document.getElementById('spy-guess-for-spy').classList.toggle('hidden', !isSpy);
     document.getElementById('spy-guess-waiting').classList.toggle('hidden', isSpy);
 
+    // Reset guess countdown
+    const cd = document.getElementById('guess-countdown');
+    if (cd) { cd.textContent = '30s'; cd.classList.remove('vote-countdown-urgent'); }
+
     if (isSpy) {
+      // Update title based on whether caught
+      const titleEl = document.getElementById('spy-guess-title');
+      const subEl = document.getElementById('spy-guess-sub');
+      if (data.spyCaught) {
+        if (titleEl) titleEl.textContent = 'YOU WERE CAUGHT — LAST CHANCE';
+        if (subEl) subEl.textContent = 'Correct guess = +1 consolation pt';
+      } else {
+        if (titleEl) titleEl.textContent = 'YOU ESCAPED — GUESS THE LOCATION';
+        if (subEl) subEl.textContent = 'Correct = +1 pt (total 3)  ·  Wrong = keep your 2 pts';
+      }
       const list = document.getElementById('spy-guess-list');
       list.innerHTML = (data.locations || []).map(loc =>
         `<button class="btn spy-guess-btn" data-loc="${esc(loc)}">${esc(loc)}</button>`
@@ -455,6 +491,7 @@ function renderPlayingScreen() {
   renderTurnState();
   renderActionPlayers();
   renderHandRaises();
+  renderVoteReadySection();
 
   // Show/hide controls
   const isCurrent = rs.currentQuestioner === state.myName;
@@ -463,6 +500,33 @@ function renderPlayingScreen() {
   // Host can skip the current player's turn on their behalf
   document.getElementById('btn-host-advance-turn').classList.toggle('hidden',
     !state.isHost || isCurrent); // hide when it's the host's own turn (they use Skip Turn)
+}
+
+function renderVoteReadySection() {
+  const rs = state.roomState;
+  if (!rs) return;
+  const section = document.getElementById('vote-ready-section');
+  if (!section) return;
+
+  const readyToVote = rs.readyToVote || [];
+  const connectedCount = rs.players.filter(p => p.connected).length;
+  const threshold = Math.max(1, connectedCount - (rs.numSpies || 1));
+  const amIReady = readyToVote.includes(state.myId);
+
+  section.classList.remove('hidden');
+  document.getElementById('vote-ready-status').textContent =
+    `${readyToVote.length} / ${threshold} agents ready to vote`;
+
+  const btn = document.getElementById('btn-ready-vote');
+  if (btn) {
+    if (amIReady) {
+      btn.textContent = 'READY ✓';
+      btn.classList.add('is-ready');
+    } else {
+      btn.textContent = 'READY TO VOTE';
+      btn.classList.remove('is-ready');
+    }
+  }
 }
 
 function renderRoleCard() {
@@ -588,6 +652,37 @@ function renderHandRaises() {
   });
 }
 
+// ─── Notebook ─────────────────────────────────────────────────────────────────
+function toggleNotebook() {
+  const modal = document.getElementById('notebook-modal');
+  if (!modal) return;
+  if (modal.classList.contains('hidden')) {
+    renderNotebook();
+    modal.classList.remove('hidden');
+  } else {
+    modal.classList.add('hidden');
+  }
+}
+
+function renderNotebook() {
+  const list = document.getElementById('nb-list');
+  if (!list) return;
+  const locations = state.roomState?.locations || [];
+  list.innerHTML = locations.map(loc => {
+    const ticked = state.notebook.has(loc);
+    return `<div class="nb-location ${ticked ? 'ticked' : ''}" data-loc="${esc(loc)}">${esc(loc)}</div>`;
+  }).join('');
+  list.querySelectorAll('.nb-location').forEach(el => {
+    el.addEventListener('click', () => tickLocation(el.dataset.loc));
+  });
+}
+
+function tickLocation(name) {
+  if (state.notebook.has(name)) state.notebook.delete(name);
+  else state.notebook.add(name);
+  renderNotebook();
+}
+
 function renderTimer() {
   const t = state.timerRemaining;
   const text = document.getElementById('timer-text');
@@ -650,10 +745,14 @@ function renderResultsScreen(result) {
   verdict.className = 'result-verdict ' + (result.spyCaught ? 'caught' : 'escaped');
 
   let spyReveal = `The ${multiSpy ? 'spies were' : 'spy was'} <strong>${spyNames.map(esc).join(', ')}</strong>`;
-  if (!result.spyCaught && result.guessedLocation !== undefined) {
-    spyReveal += result.guessCorrect
-      ? ` — guessed <strong>${esc(result.guessedLocation)}</strong> ✓ (+2 pts)`
-      : ` — guessed <strong>${esc(result.guessedLocation)}</strong> ✗`;
+  if (result.guessedLocation) {
+    if (result.guessCorrect) {
+      spyReveal += result.spyCaught
+        ? ` — guessed <strong>${esc(result.guessedLocation)}</strong> ✓ (+1 consolation pt)`
+        : ` — guessed <strong>${esc(result.guessedLocation)}</strong> ✓ (+1 pt)`;
+    } else {
+      spyReveal += ` — guessed <strong>${esc(result.guessedLocation)}</strong> ✗`;
+    }
   }
   document.getElementById('spy-reveal').innerHTML = spyReveal;
 
@@ -1239,6 +1338,28 @@ function setupListeners() {
   document.getElementById('btn-reset-room').onclick = () => {
     state.socket.emit('reset-room');
   };
+
+  // Ready to vote
+  document.getElementById('btn-ready-vote').onclick = () => {
+    const readyToVote = state.roomState?.readyToVote || [];
+    const amIReady = readyToVote.includes(state.myId);
+    if (amIReady) {
+      state.socket.emit('unready-to-vote', {}, (res) => {
+        if (res?.error) showToast(res.error, 'error');
+      });
+    } else {
+      state.socket.emit('ready-to-vote', {}, (res) => {
+        if (res?.error) showToast(res.error, 'error');
+      });
+    }
+  };
+
+  // Notebook
+  document.getElementById('btn-notebook').onclick = toggleNotebook;
+  document.getElementById('notebook-close').onclick = () =>
+    document.getElementById('notebook-modal').classList.add('hidden');
+  document.getElementById('notebook-backdrop').onclick = () =>
+    document.getElementById('notebook-modal').classList.add('hidden');
 
   // Location info modal close
   document.getElementById('loc-info-close').onclick = () =>

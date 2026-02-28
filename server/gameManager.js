@@ -55,6 +55,7 @@ class GameManager {
       timeRemaining: 0,
       votes: {},
       handRaises: new Set(),
+      readyToVote: new Set(),
       scores: {},
       createdAt: Date.now()
     };
@@ -205,6 +206,7 @@ class GameManager {
     room.phase = PHASES.PLAYING;
     room.votes = {};
     room.handRaises = new Set();
+    room.readyToVote = new Set();
     room.timeRemaining = room.timerSeconds;
 
     return { room, assignments };
@@ -303,6 +305,7 @@ class GameManager {
     room.phase = PHASES.VOTING;
     room.votes = {};
     room.handRaises = new Set();
+    room.readyToVote = new Set();
     return { room };
   }
 
@@ -340,20 +343,21 @@ class GameManager {
     const spyIdSet = new Set(room.currentRound.spies);
 
     if (spyCaught) {
-      // Agents win: 1 pt each
+      // Agents win: 2 pts each — spy still gets to guess for a consolation point
       room.players.forEach(p => {
         if (!room.scores[p.name]) room.scores[p.name] = 0;
-        if (!spyIdSet.has(p.id)) room.scores[p.name] += 1;
+        if (!spyIdSet.has(p.id)) room.scores[p.name] += 2;
       });
-      room.phase = PHASES.RESULTS;
     } else {
-      // Spy survives: 1 pt for now — may earn 2 more by guessing the location
+      // Spy survives: 2 pts — may earn 1 more by guessing the location
       room.players.forEach(p => {
         if (!room.scores[p.name]) room.scores[p.name] = 0;
-        if (spyIdSet.has(p.id)) room.scores[p.name] += 1;
+        if (spyIdSet.has(p.id)) room.scores[p.name] += 2;
       });
-      room.phase = PHASES.SPY_GUESS;
     }
+
+    room.currentRound.spyCaught = spyCaught;
+    room.phase = PHASES.SPY_GUESS;
 
     const base = {
       tally,
@@ -366,9 +370,7 @@ class GameManager {
       players: room.players
     };
 
-    return spyCaught
-      ? { ...base, awaitingSpyGuess: false }
-      : { ...base, awaitingSpyGuess: true, locations: room.locations.map(l => l.Location) };
+    return { ...base, awaitingSpyGuess: true, locations: room.locations.map(l => l.Location) };
   }
 
   submitSpyGuess(code, socketId, guessedLocation) {
@@ -381,14 +383,14 @@ class GameManager {
     const correct = guessedLocation === room.currentRound.location;
     if (correct) {
       room.players.forEach(p => {
-        if (spyIdSet.has(p.id)) room.scores[p.name] = (room.scores[p.name] || 0) + 2;
+        if (spyIdSet.has(p.id)) room.scores[p.name] = (room.scores[p.name] || 0) + 1;
       });
     }
 
     room.phase = PHASES.RESULTS;
 
     return {
-      spyCaught: false,
+      spyCaught: room.currentRound.spyCaught ?? false,
       awaitingSpyGuess: false,
       guessedLocation,
       guessCorrect: correct,
@@ -496,12 +498,35 @@ class GameManager {
     room.currentRound = null;
     room.votes = {};
     room.handRaises = new Set();
+    room.readyToVote = new Set();
     room.timeRemaining = 0;
     // Remove disconnected players
     room.players = room.players.filter(p => p.connected);
     // scores persist intentionally
 
     return { room };
+  }
+
+  markReadyToVote(code, socketId) {
+    const room = this.rooms.get(code);
+    if (!room) return { error: 'Room not found' };
+    if (room.phase !== PHASES.PLAYING) return { error: 'Not in playing phase' };
+    room.readyToVote.add(socketId);
+    const connectedPlayers = room.players.filter(p => p.connected);
+    const threshold = Math.max(1, connectedPlayers.length - room.numSpies);
+    const readyCount = room.readyToVote.size;
+    const autoStart = readyCount >= threshold;
+    return { readyCount, threshold, autoStart, room };
+  }
+
+  unmarkReadyToVote(code, socketId) {
+    const room = this.rooms.get(code);
+    if (!room) return { error: 'Room not found' };
+    room.readyToVote.delete(socketId);
+    const connectedPlayers = room.players.filter(p => p.connected);
+    const threshold = Math.max(1, connectedPlayers.length - room.numSpies);
+    const readyCount = room.readyToVote.size;
+    return { readyCount, threshold, room };
   }
 
   resetScores(code, socketId) {
@@ -539,6 +564,7 @@ class GameManager {
       votes: room.phase === PHASES.VOTING
         ? { count: Object.keys(room.votes).length, total: room.players.filter(p => p.connected).length, votedIds: Object.keys(room.votes) }
         : null,
+      readyToVote: room.phase === PHASES.PLAYING ? Array.from(room.readyToVote) : [],
       locations: room.locations.map(l => l.Location),
       numSpies: room.numSpies,
       maxPlayers: room.maxPlayers,

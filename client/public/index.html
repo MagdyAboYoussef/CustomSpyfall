@@ -327,9 +327,15 @@
 
         <div class="players-action-grid" id="action-players"></div>
 
+        <div id="vote-ready-section" class="vote-ready-section hidden">
+          <div id="vote-ready-status" class="vote-ready-status"></div>
+          <button class="btn btn-ready-vote" id="btn-ready-vote">READY TO VOTE</button>
+        </div>
+
         <div class="playing-controls">
           <button class="btn btn-outline" id="btn-raise-hand">✋ Raise Hand</button>
           <button class="btn btn-skip" id="btn-skip-turn">SKIP TURN</button>
+          <button class="btn btn-outline" id="btn-notebook">NOTEBOOK</button>
           <div id="host-vote-control" class="hidden">
             <button class="btn btn-outline btn-sm" id="btn-host-advance-turn">SKIP PLAYER TURN</button>
             <button class="btn btn-danger" id="btn-start-voting">START VOTE</button>
@@ -358,6 +364,7 @@
           <div class="voting-title">VOTE OUT THE SPY</div>
           <div class="voting-sub" id="voting-sub">Select who you think is the spy</div>
           <div class="vote-progress" id="vote-progress"></div>
+          <div class="vote-countdown" id="vote-countdown"></div>
         </div>
         <div class="voting-grid" id="voting-grid"></div>
         <div id="host-force-results" class="hidden" style="text-align:center;margin-top:1rem">
@@ -467,16 +474,30 @@
   <div id="spy-guess-modal" class="loc-info-modal hidden">
     <div class="loc-info-backdrop"></div>
     <div class="loc-info-content spy-guess-content">
+      <div class="guess-countdown" id="guess-countdown"></div>
       <div id="spy-guess-for-spy">
-        <div class="spy-guess-title">YOU ESCAPED — GUESS THE LOCATION</div>
-        <div class="spy-guess-sub">Correct = +2 pts (total 3) &nbsp;·&nbsp; Wrong = keep your 1 pt</div>
+        <div class="spy-guess-title" id="spy-guess-title">GUESS THE LOCATION</div>
+        <div class="spy-guess-sub" id="spy-guess-sub">Correct = +1 consolation pt</div>
         <div id="spy-guess-list" class="spy-guess-list"></div>
       </div>
       <div id="spy-guess-waiting" class="hidden">
-        <div class="spy-guess-title">SPY ESCAPED</div>
+        <div class="spy-guess-title">SPY IS GUESSING</div>
         <div class="spy-guess-sub">Waiting for the spy to guess the location…</div>
         <div class="spy-guess-spinner">⏳</div>
       </div>
+    </div>
+  </div>
+
+  <!-- Notebook Modal -->
+  <div id="notebook-modal" class="loc-info-modal hidden">
+    <div class="loc-info-backdrop" id="notebook-backdrop"></div>
+    <div class="loc-info-content notebook-content">
+      <div class="loc-info-header">
+        <div class="loc-info-name" style="font-size:1.4rem">NOTEBOOK</div>
+        <button class="loc-info-close" id="notebook-close">✕</button>
+      </div>
+      <div class="loc-info-label">LOCATIONS — click to cross out</div>
+      <div id="nb-list" class="nb-list"></div>
     </div>
   </div>
 
