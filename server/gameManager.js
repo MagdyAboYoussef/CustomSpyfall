@@ -56,6 +56,7 @@ class GameManager {
       votes: {},
       handRaises: new Set(),
       readyToVote: new Set(),
+      pendingVote: false,
       scores: {},
       createdAt: Date.now()
     };
@@ -306,6 +307,7 @@ class GameManager {
     room.votes = {};
     room.handRaises = new Set();
     room.readyToVote = new Set();
+    room.pendingVote = false;
     return { room };
   }
 
@@ -522,6 +524,7 @@ class GameManager {
     room.votes = {};
     room.handRaises = new Set();
     room.readyToVote = new Set();
+    room.pendingVote = false;
     room.timeRemaining = 0;
     // Remove disconnected players
     room.players = room.players.filter(p => p.connected);

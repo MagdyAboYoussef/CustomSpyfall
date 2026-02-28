@@ -543,6 +543,12 @@ input[type="text"]:focus, input[type="number"]:focus {
   cursor: pointer; line-height: 1; transition: all 0.15s; font-family: var(--font-mono);
 }
 .btn-grant-turn:hover { border-color: var(--green); background: rgba(0,232,122,0.1); }
+.btn-lower-hand {
+  background: none; border: 1px solid var(--border);
+  color: var(--red); font-size: 0.6rem; padding: 0.1rem 0.4rem;
+  cursor: pointer; line-height: 1; transition: all 0.15s; font-family: var(--font-mono);
+}
+.btn-lower-hand:hover { border-color: var(--red); background: rgba(255,60,60,0.1); }
 
 /* ─── Voting ──────────────────────────────────────────────────────────────── */
 .voting-header { text-align: center; padding: 0.5rem 0 1rem; }
@@ -757,6 +763,8 @@ input[type="text"]:focus, input[type="number"]:focus {
 }
 .btn-sound-toggle:hover { color: var(--text); }
 .btn-sound-toggle.muted { color: var(--red); }
+.chat-header .btn-sound-toggle { color: var(--red); }
+.chat-header .btn-sound-toggle.muted { opacity: 0.5; }
 .btn-sound-toggle-fixed {
   position: fixed; bottom: 1rem; left: 1rem; z-index: 10000;
   background: var(--surface); border: 1px solid var(--border);

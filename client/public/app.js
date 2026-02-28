@@ -437,6 +437,14 @@ function connectSocket() {
     addSystemChat('all', `${playerName} lowered their hand`);
   });
 
+  socket.on('timer-ended-hands-pending', ({ roomState }) => {
+    updateRoomState(roomState);
+    renderHandRaises();
+    SFX.timerWarn();
+    addSystemChat('play', 'Time is up! Voting will start once the host resolves all raised hands.');
+    showToast('Timer ended — host must resolve raised hands before voting begins', 'warn', 6000);
+  });
+
   socket.on('timer-tick', ({ timeRemaining }) => {
     state.timerRemaining = timeRemaining;
     if (timeRemaining === 60 || timeRemaining === 30) SFX.timerWarn();
@@ -864,15 +872,21 @@ function renderHandRaises() {
     rs.handRaises.map(h => {
       const name = typeof h === 'string' ? h : h.name;
       const id = typeof h === 'object' ? h.id : null;
-      const grantBtn = (state.isHost && id)
-        ? `<button class="btn-grant-turn" data-id="${esc(id)}" title="Give questioning turn">▶</button>`
+      const hostBtns = (state.isHost && id)
+        ? `<button class="btn-grant-turn" data-id="${esc(id)}" title="Give questioning turn">▶</button>` +
+          `<button class="btn-lower-hand" data-id="${esc(id)}" title="Lower hand">✕</button>`
         : '';
-      return `<div class="hand-entry"><span class="hand-chip">✋ ${esc(name)}</span>${grantBtn}</div>`;
+      return `<div class="hand-entry"><span class="hand-chip">✋ ${esc(name)}</span>${hostBtns}</div>`;
     }).join('');
 
   el.querySelectorAll('.btn-grant-turn').forEach(btn => {
     btn.addEventListener('click', () => {
       state.socket.emit('grant-turn', { targetId: btn.dataset.id });
+    });
+  });
+  el.querySelectorAll('.btn-lower-hand').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.socket.emit('host-lower-hand', { targetId: btn.dataset.id });
     });
   });
 }
@@ -1719,7 +1733,7 @@ function setupListeners() {
     btn.onclick = () => {
       const muted = SFX.toggleMute();
       document.querySelectorAll('.btn-sound-toggle').forEach(b => {
-        b.textContent = muted ? 'UNMUTE' : 'MUTE';
+        b.textContent = muted ? 'UNMUTE SOUND' : 'MUTE SOUND';
         b.classList.toggle('muted', muted);
       });
     };

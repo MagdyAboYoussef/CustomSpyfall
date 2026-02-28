@@ -229,7 +229,7 @@ io.on('connection', (socket) => {
     cb?.({ success: true });
   });
 
-  // Lower hand
+  // Lower hand (player lowers their own)
   socket.on('lower-hand', (_, cb) => {
     const code = socket.data.roomCode;
     const result = gameManager.lowerHand(code, socket.id);
@@ -240,6 +240,39 @@ io.on('connection', (socket) => {
       ...result,
       roomState: gameManager.getPublicRoomState(room)
     });
+    if (room.pendingVote && room.handRaises.size === 0) {
+      room.pendingVote = false;
+      gameManager.startVoting(code, room.hostSocketId);
+      io.to(code).emit('voting-started', {
+        roomState: gameManager.getPublicRoomState(room),
+        reason: 'All hands resolved — vote begins!'
+      });
+      startVoteTimer(code);
+    }
+    cb?.({ success: true });
+  });
+
+  // Host lowers a specific player's hand
+  socket.on('host-lower-hand', ({ targetId }, cb) => {
+    const code = socket.data.roomCode;
+    const room = gameManager.rooms.get(code);
+    if (!room || room.hostSocketId !== socket.id) return cb?.({ success: false, error: 'Not host' });
+    const result = gameManager.lowerHand(code, targetId);
+    if (result.error) return cb?.({ success: false, error: result.error });
+
+    io.to(code).emit('hand-lowered', {
+      ...result,
+      roomState: gameManager.getPublicRoomState(room)
+    });
+    if (room.pendingVote && room.handRaises.size === 0) {
+      room.pendingVote = false;
+      gameManager.startVoting(code, room.hostSocketId);
+      io.to(code).emit('voting-started', {
+        roomState: gameManager.getPublicRoomState(room),
+        reason: 'All hands resolved — vote begins!'
+      });
+      startVoteTimer(code);
+    }
     cb?.({ success: true });
   });
 
@@ -255,6 +288,15 @@ io.on('connection', (socket) => {
       granted: true,
       roomState: gameManager.getPublicRoomState(room)
     });
+    if (room.pendingVote && room.handRaises.size === 0) {
+      room.pendingVote = false;
+      gameManager.startVoting(code, room.hostSocketId);
+      io.to(code).emit('voting-started', {
+        roomState: gameManager.getPublicRoomState(room),
+        reason: 'All hands resolved — vote begins!'
+      });
+      startVoteTimer(code);
+    }
     cb?.({ success: true });
   });
 
@@ -581,13 +623,21 @@ function startTimer(code) {
     if (r.timeRemaining === 0) {
       clearInterval(interval);
       timers.delete(code);
-      // Auto-start voting when timer hits 0
-      gameManager.startVoting(code, r.hostSocketId);
-      io.to(code).emit('voting-started', {
-        roomState: gameManager.getPublicRoomState(r),
-        reason: 'Time is up!'
-      });
-      startVoteTimer(code);
+      if (r.handRaises.size > 0) {
+        // Hands are raised — hold off voting until host resolves them
+        r.pendingVote = true;
+        io.to(code).emit('timer-ended-hands-pending', {
+          roomState: gameManager.getPublicRoomState(r),
+          handCount: r.handRaises.size
+        });
+      } else {
+        gameManager.startVoting(code, r.hostSocketId);
+        io.to(code).emit('voting-started', {
+          roomState: gameManager.getPublicRoomState(r),
+          reason: 'Time is up!'
+        });
+        startVoteTimer(code);
+      }
     }
   }, 1000);
 
