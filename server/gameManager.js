@@ -371,10 +371,15 @@ class GameManager {
     room.players.forEach(p => { scoresBefore[p.name] = room.scores[p.name] || 0; });
 
     if (spyCaught) {
-      // Agents win: 2 pts each — spy still gets to guess for a consolation point
+      // Agents win: +1 team bonus, +1 extra if voted correctly
       room.players.forEach(p => {
         if (!room.scores[p.name]) room.scores[p.name] = 0;
-        if (!spyIdSet.has(p.id)) room.scores[p.name] += 2;
+        if (!spyIdSet.has(p.id)) {
+          room.scores[p.name] += 1;
+          if (room.votes[p.id] && spyIdSet.has(room.votes[p.id])) {
+            room.scores[p.name] += 1;
+          }
+        }
       });
     } else {
       // Spy survives: 2 pts. Agents who voted correctly get +1 consolation point.

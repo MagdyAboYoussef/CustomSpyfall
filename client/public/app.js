@@ -957,7 +957,7 @@ function renderActionPlayers() {
            ${canAsk ? `onclick="askPlayer('${p.id}')"` : ''}
            data-id="${p.id}">
         <div class="ap-name">${esc(p.name)}</div>
-        <div class="ap-label">${isMe ? 'YOU' : isCurrent ? 'ASKING' : isTarget ? 'ANSWERING' : p.connected ? 'AGENT' : 'OFFLINE'}</div>
+        <div class="ap-label">${isMe ? 'YOU' : isCurrent ? 'ASKING' : isTarget ? 'ANSWERING' : !p.connected ? 'OFFLINE' : (rs.readyToVote || []).includes(p.id) ? '<span style="color:#4caf50">READY TO VOTE</span>' : 'AGENT'}</div>
       </div>
     `;
   }).join('');
@@ -1054,7 +1054,7 @@ function tickLocation(name) {
 function initHints() {
   if (state.hintState?.interval) clearInterval(state.hintState.interval);
   state.hintState = {
-    type: 'location',
+    type: 'topic',
     cooldownEnd: 0,
     currentHint: null,
     interval: null,
