@@ -791,6 +791,38 @@ function renderRoundHistory(history) {
         return `<span class="rh-earn-chip">${esc(name)} <span class="earn-pts${zeroCls}">+${pts}</span></span>`;
       }).join('');
 
+    const spyNameSet = new Set(rh.spyNames || []);
+    const detailId = `rh-details-${rh.roundNum}`;
+    const voteLines = (rh.voteBreakdown || [])
+      .filter(v => !spyNameSet.has(v.voterName))
+      .map(v => {
+        if (v.skipped) {
+          const pts = (rh.earnedThisRound || {})[v.voterName] || 0;
+          let reason = 'Skipped vote';
+          if (rh.spyCaught) reason = 'Spy caught, skipped vote';
+          return `<div class="rh-vote-line"><span class="rh-voter">${esc(v.voterName)}</span> skipped vote <span class="rh-vote-incorrect">(no vote)</span> <span class="rh-vote-pts">=> +${pts}</span> <span class="rh-vote-reason">[${reason}]</span></div>`;
+        }
+        const correctCls = v.votedForSpy ? 'rh-vote-correct' : 'rh-vote-incorrect';
+        const correctLabel = v.votedForSpy ? 'correct' : 'incorrect';
+        const targetName = spyNameSet.has(v.votedForName)
+          ? `<span class="rh-spy-name">${esc(v.votedForName)}</span>`
+          : esc(v.votedForName);
+        const pts = (rh.earnedThisRound || {})[v.voterName] || 0;
+        let reason;
+        if (rh.spyCaught) {
+          reason = v.votedForSpy ? 'Spy caught, voted correctly' : 'Spy caught, voted incorrectly';
+        } else {
+          reason = v.votedForSpy ? 'Spy escaped, voted correctly' : 'Spy escaped, voted incorrectly';
+        }
+        return `<div class="rh-vote-line"><span class="rh-voter">${esc(v.voterName)}</span> voted on ${targetName} <span class="${correctCls}">(${correctLabel})</span> <span class="rh-vote-pts">=> +${pts}</span> <span class="rh-vote-reason">[${reason}]</span></div>`;
+      }).join('');
+
+    const detailsSection = voteLines ? `
+      <div class="rh-details-toggle" onclick="document.getElementById('${detailId}').classList.toggle('hidden');this.querySelector('.rh-details-arrow').textContent=document.getElementById('${detailId}').classList.contains('hidden')?'▶':'▼'">
+        <span class="rh-details-arrow">▶</span> Vote Details
+      </div>
+      <div id="${detailId}" class="rh-details hidden">${voteLines}</div>` : '';
+
     return `<div class="rh-entry">
       <div class="rh-header">
         <span class="rh-round">ROUND ${rh.roundNum}</span>
@@ -800,6 +832,7 @@ function renderRoundHistory(history) {
       <div class="rh-spies">Spy: <strong>${spyLabel}</strong></div>
       ${guessLine}
       ${earnedChips ? `<div class="rh-earnings">${earnedChips}</div>` : ''}
+      ${detailsSection}
     </div>`;
   }).join('');
 }

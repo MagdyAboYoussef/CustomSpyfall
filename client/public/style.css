@@ -1248,6 +1248,26 @@ input[type="text"]:focus, input[type="number"]:focus {
 }
 .rh-earn-chip .earn-pts { color: var(--green); font-weight: 600; }
 .rh-earn-chip .earn-pts.zero { color: var(--text-muted); }
+
+/* Vote Details (nested expandable inside round history) */
+.rh-details-toggle {
+  font-size: 0.65rem; color: var(--text-muted); cursor: pointer;
+  margin-top: 0.3rem; user-select: none;
+}
+.rh-details-toggle:hover { color: var(--text); }
+.rh-details-arrow { font-size: 0.6rem; margin-right: 0.2rem; }
+.rh-details {
+  margin-top: 0.25rem; padding-left: 0.5rem;
+  border-left: 2px solid var(--border); font-size: 0.6rem;
+}
+.rh-vote-line { margin: 0.15rem 0; color: var(--text-muted); }
+.rh-voter { color: var(--text); }
+.rh-vote-correct { color: var(--green); font-weight: 600; }
+.rh-vote-incorrect { color: var(--red); font-weight: 600; }
+.rh-spy-name { color: var(--green); font-weight: 600; }
+.rh-vote-pts { color: var(--gold, #ffd700); font-weight: 600; }
+.rh-vote-reason { color: var(--text-muted); font-size: 0.55rem; }
+
 @media (max-width: 640px) { .notebook-panel { right: 0; } }
 
 

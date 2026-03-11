@@ -473,7 +473,8 @@ class GameManager {
       isTie: round.isTie ?? false,
       guessedLocation: round.guessedLocation ?? null,
       guessCorrect: round.guessCorrect ?? false,
-      earnedThisRound: { ...(round.earnedThisRound || {}) }
+      earnedThisRound: { ...(round.earnedThisRound || {}) },
+      voteBreakdown: [...(round.voteBreakdown || [])]
     });
   }
 
