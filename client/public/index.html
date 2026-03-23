@@ -99,6 +99,7 @@
         <div class="loc-source-tabs">
           <button class="loc-tab active" data-tab="picker">PICK LOCATIONS</button>
           <button class="loc-tab" data-tab="csv">UPLOAD CSV</button>
+          <button class="loc-tab" data-tab="build">CREATE THEME</button>
         </div>
 
         <!-- Location Picker Tab -->
@@ -143,6 +144,16 @@
             <button class="btn btn-ghost small" id="btn-select-programming">Select</button>
           </div>
           <div id="picker-programming" class="picker-grid"></div>
+        </div>
+
+        <!-- Build Theme Tab -->
+        <div id="tab-build" class="loc-tab-content hidden">
+          <div id="build-rows-container"></div>
+          <div class="build-footer">
+            <button class="btn btn-ghost small" id="btn-add-location">+ ADD LOCATION</button>
+            <button class="btn btn-outline btn-sm" id="btn-download-csv">SAVE AS CSV ↓</button>
+          </div>
+          <div id="build-status" class="csv-status hidden"></div>
         </div>
 
         <!-- CSV Upload Tab -->

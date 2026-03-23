@@ -336,7 +336,8 @@ const state = {
   loadedLocations: null,      // for CSV mode
   selectedCsvLocNames: new Set(), // for CSV mode selection
   selectedLocNames: new Set(), // for picker mode
-  locationSource: 'picker',    // 'picker' | 'csv'
+  locationSource: 'picker',    // 'picker' | 'csv' | 'build'
+  buildRows: [],               // for build mode: [{name, roles:[]}]
   allBuiltinLocations: [],
   numSpies: 1,
   maxPlayers: 8,
@@ -1591,6 +1592,16 @@ function getLocationsPayload() {
     const selected = (state.loadedLocations || []).filter(l => state.selectedCsvLocNames.has(l.Location));
     return { locations: selected, locationNames: null };
   }
+  if (state.locationSource === 'build') {
+    const locations = state.buildRows
+      .filter(r => r.name.trim())
+      .map(r => {
+        const obj = { Location: r.name.trim() };
+        r.roles.filter(role => role.trim()).forEach((role, i) => { obj[`Role${i + 1}`] = role.trim(); });
+        return obj;
+      });
+    return { locations, locationNames: null };
+  }
   // Picker mode: send only names — server resolves to full objects
   const names = [...state.selectedLocNames];
   return { locationNames: names, locations: null };
@@ -1628,8 +1639,113 @@ function setupListeners() {
       state.locationSource = tab.dataset.tab;
       document.getElementById('tab-picker').classList.toggle('hidden', tab.dataset.tab !== 'picker');
       document.getElementById('tab-csv').classList.toggle('hidden', tab.dataset.tab !== 'csv');
+      document.getElementById('tab-build').classList.toggle('hidden', tab.dataset.tab !== 'build');
     });
   });
+
+  // Build theme tab
+  function renderBuildTab() {
+    const container = document.getElementById('build-rows-container');
+    if (!container) return;
+    if (state.buildRows.length === 0) {
+      container.innerHTML = '<div class="build-empty">No locations yet — press + ADD LOCATION to start.</div>';
+      return;
+    }
+    container.innerHTML = state.buildRows.map((row, ri) => `
+      <div class="build-row" data-row="${ri}">
+        <div class="build-row-main">
+          <input class="build-name-input" placeholder="Location name..." value="${esc(row.name)}" data-row="${ri}" />
+          <button class="build-remove-row" data-row="${ri}" title="Remove location">×</button>
+        </div>
+        <div class="build-roles">
+          ${row.roles.map((r, ci) => `
+            <div class="build-role-wrap">
+              <input class="build-role-input" placeholder="Role..." value="${esc(r)}" data-row="${ri}" data-role="${ci}" />
+              <button class="build-remove-role" data-row="${ri}" data-role="${ci}" title="Remove role">×</button>
+            </div>
+          `).join('')}
+          <button class="build-add-role" data-row="${ri}">+</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function syncBuildRowFromDOM(ri) {
+    const nameEl = document.querySelector(`.build-name-input[data-row="${ri}"]`);
+    if (nameEl) state.buildRows[ri].name = nameEl.value;
+    document.querySelectorAll(`.build-role-input[data-row="${ri}"]`).forEach(el => {
+      const ci = parseInt(el.dataset.role);
+      state.buildRows[ri].roles[ci] = el.value;
+    });
+  }
+
+  function syncAllBuildRows() {
+    state.buildRows.forEach((_, ri) => syncBuildRowFromDOM(ri));
+  }
+
+  const buildContainer = document.getElementById('build-rows-container');
+
+  buildContainer.addEventListener('input', e => {
+    const ri = parseInt(e.target.dataset.row);
+    if (isNaN(ri)) return;
+    if (e.target.classList.contains('build-name-input')) {
+      state.buildRows[ri].name = e.target.value;
+    } else if (e.target.classList.contains('build-role-input')) {
+      const ci = parseInt(e.target.dataset.role);
+      state.buildRows[ri].roles[ci] = e.target.value;
+    }
+  });
+
+  buildContainer.addEventListener('click', e => {
+    const ri = parseInt(e.target.dataset.row);
+    if (isNaN(ri)) return;
+
+    if (e.target.classList.contains('build-remove-row')) {
+      syncAllBuildRows();
+      state.buildRows.splice(ri, 1);
+      renderBuildTab();
+    } else if (e.target.classList.contains('build-add-role')) {
+      syncAllBuildRows();
+      state.buildRows[ri].roles.push('');
+      renderBuildTab();
+    } else if (e.target.classList.contains('build-remove-role')) {
+      syncAllBuildRows();
+      const ci = parseInt(e.target.dataset.role);
+      state.buildRows[ri].roles.splice(ci, 1);
+      renderBuildTab();
+    }
+  });
+
+  document.getElementById('btn-add-location').onclick = () => {
+    syncAllBuildRows();
+    state.buildRows.push({ name: '', roles: ['', ''] });
+    renderBuildTab();
+    // Focus the new location name input
+    const inputs = document.querySelectorAll('.build-name-input');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  };
+
+  document.getElementById('btn-download-csv').onclick = () => {
+    syncAllBuildRows();
+    const rows = state.buildRows.filter(r => r.name.trim());
+    if (rows.length === 0) { showToast('Add at least one location first', 'error'); return; }
+    const maxRoles = Math.max(...rows.map(r => r.roles.filter(s => s.trim()).length));
+    const headers = ['Location', ...Array.from({ length: maxRoles }, (_, i) => `Role${i + 1}`)];
+    const lines = [headers.join(',')];
+    rows.forEach(r => {
+      const roles = r.roles.filter(s => s.trim());
+      const cells = [r.name.trim(), ...roles].map(v => `"${v.replace(/"/g, '""')}"`);
+      while (cells.length < headers.length) cells.push('""');
+      lines.push(cells.join(','));
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'custom-theme.csv'; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  renderBuildTab();
 
   // Picker quick-select buttons (per category)
   document.getElementById('btn-select-spyfall').onclick    = () => setPickerSelection(l => l.set === 'classic' || l.set === 'spyfall2');
@@ -1729,6 +1845,11 @@ function setupListeners() {
     }
     if (state.locationSource === 'csv' && (!locations || locations.length === 0)) {
       errEl.textContent = 'Upload a CSV or switch to Pick Locations';
+      errEl.classList.remove('hidden');
+      return;
+    }
+    if (state.locationSource === 'build' && (!locations || locations.length === 0)) {
+      errEl.textContent = 'Add at least one location in the theme builder';
       errEl.classList.remove('hidden');
       return;
     }
