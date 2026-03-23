@@ -1199,7 +1199,6 @@ function renderVotingScreen() {
   document.getElementById('vote-progress').textContent =
     rs.votes ? `${rs.votes.count} / ${rs.votes.total} voted` : '';
 
-  document.getElementById('host-force-results').classList.toggle('hidden', !state.isHost);
   document.getElementById('voting-sub').textContent = state.hasVoted
     ? 'Vote cast. Waiting for others...'
     : 'Select who you think is the spy';
@@ -1207,6 +1206,12 @@ function renderVotingScreen() {
 
 // ─── Results Screen ───────────────────────────────────────────────────────────
 function renderResultsScreen(result) {
+  // Reset blur state — results always start blurred
+  const revealSection = document.getElementById('results-reveal-section');
+  const revealBtn = document.getElementById('btn-toggle-reveal');
+  if (revealSection) revealSection.classList.add('blurred');
+  if (revealBtn) { revealBtn.textContent = 'REVEAL'; revealBtn.classList.remove('btn-ghost'); revealBtn.classList.add('btn-primary'); }
+
   const verdict = document.getElementById('result-verdict');
   const spyNames = result.spyNames || [];
   const multiSpy = spyNames.length > 1;
@@ -1881,9 +1886,16 @@ function setupListeners() {
     state.socket.emit('start-voting');
   };
 
-  // Force results
-  document.getElementById('btn-force-results').onclick = () => {
-    state.socket.emit('force-results');
+  // Toggle blur on results reveal
+  document.getElementById('btn-toggle-reveal').onclick = () => {
+    const section = document.getElementById('results-reveal-section');
+    const btn = document.getElementById('btn-toggle-reveal');
+    if (!section) return;
+    const isBlurred = section.classList.contains('blurred');
+    section.classList.toggle('blurred');
+    btn.textContent = isBlurred ? 'BLUR' : 'REVEAL';
+    if (isBlurred) { btn.classList.remove('btn-primary'); btn.classList.add('btn-ghost'); }
+    else { btn.classList.remove('btn-ghost'); btn.classList.add('btn-primary'); }
   };
 
   // Reset room

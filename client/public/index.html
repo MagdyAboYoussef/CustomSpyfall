@@ -397,9 +397,6 @@
           <div class="vote-countdown" id="vote-countdown"></div>
         </div>
         <div class="voting-grid" id="voting-grid"></div>
-        <div id="host-force-results" class="hidden" style="text-align:center;margin-top:1rem">
-          <button class="btn btn-danger" id="btn-force-results">REVEAL RESULTS →</button>
-        </div>
       </div>
       <div class="chat-panel" id="chat-panel-vote">
         <div class="chat-header"><span>COMMS</span><button class="btn-sound-toggle">MUTE</button><button class="btn-chat-close" data-panel="chat-panel-vote">✕</button></div>
@@ -416,14 +413,17 @@
   <!-- RESULTS -->
   <div id="screen-results" class="screen">
     <div class="results-wrap">
-      <div class="result-verdict" id="result-verdict"></div>
-      <div class="spy-reveal" id="spy-reveal"></div>
-      <div class="result-outcome" id="result-outcome"></div>
-      <div class="result-location" id="result-location"></div>
-      <div class="assignments-reveal" id="assignments-reveal"></div>
-      <div id="vote-breakdown" class="vote-breakdown hidden"></div>
-      <div id="result-scoreboard" class="result-scoreboard hidden"></div>
+      <div id="results-reveal-section" class="results-reveal-section blurred">
+        <div class="result-verdict" id="result-verdict"></div>
+        <div class="spy-reveal" id="spy-reveal"></div>
+        <div class="result-outcome" id="result-outcome"></div>
+        <div class="result-location" id="result-location"></div>
+        <div class="assignments-reveal" id="assignments-reveal"></div>
+        <div id="vote-breakdown" class="vote-breakdown hidden"></div>
+        <div id="result-scoreboard" class="result-scoreboard hidden"></div>
+      </div>
       <div class="result-actions">
+        <button class="btn btn-primary" id="btn-toggle-reveal">REVEAL</button>
         <div id="host-reset" class="hidden">
           <button class="btn btn-primary" id="btn-reset-room">PLAY AGAIN</button>
         </div>

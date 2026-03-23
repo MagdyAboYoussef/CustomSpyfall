@@ -656,6 +656,15 @@ input[type="text"]:focus, input[type="number"]:focus {
 .assign-chip.is-spy { border-color: var(--red); color: var(--red); }
 .assign-chip.is-spy span { color: white; }
 
+.results-reveal-section {
+  display: contents;
+}
+.results-reveal-section.blurred > * {
+  filter: blur(8px);
+  user-select: none;
+  pointer-events: none;
+}
+
 /* ─── Scrollbars ──────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--surface); }

@@ -363,20 +363,6 @@ io.on('connection', (socket) => {
     cb?.({ success: true });
   });
 
-  // Force end (host only)
-  socket.on('force-results', (_, cb) => {
-    const code = socket.data.roomCode;
-    const room = gameManager.rooms.get(code);
-    if (!room || room.hostSocketId !== socket.id) return cb?.({ success: false, error: 'Not host' });
-    if (room.phase !== PHASES.VOTING) return cb?.({ success: false, error: 'Not in voting phase' });
-
-    stopVoteTimer(code);
-    const resolution = gameManager.resolveVotes(code);
-    io.to(code).emit('spy-guess-prompt', { ...resolution, roomState: gameManager.getPublicRoomState(room) });
-    startGuessTimer(code);
-    cb?.({ success: true });
-  });
-
   // Spy location guess
   socket.on('spy-guess', ({ guessedLocation }, cb) => {
     const code = socket.data.roomCode;
