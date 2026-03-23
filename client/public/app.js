@@ -936,11 +936,19 @@ function resetRoleReveal() {
   const overlay = document.getElementById('role-reveal-overlay');
   const inner = document.getElementById('role-card-inner');
   if (!overlay || !inner) return;
-  overlay.classList.remove('hidden');
+
+  // Reset to blurred state
+  overlay.classList.remove('hidden', 'revealed');
   inner.classList.add('blurred');
+  overlay.querySelector('.role-reveal-icon').textContent = '🔒';
+  overlay.querySelector('.role-reveal-text').textContent = 'TAP TO REVEAL';
+
   overlay.onclick = () => {
-    overlay.classList.add('hidden');
-    inner.classList.remove('blurred');
+    const isBlurred = inner.classList.contains('blurred');
+    inner.classList.toggle('blurred');
+    overlay.classList.toggle('revealed', isBlurred);
+    overlay.querySelector('.role-reveal-icon').textContent = isBlurred ? '🔓' : '🔒';
+    overlay.querySelector('.role-reveal-text').textContent = isBlurred ? 'TAP TO HIDE' : 'TAP TO REVEAL';
   };
 }
 
@@ -1878,18 +1886,6 @@ function setupListeners() {
   // Start voting
   document.getElementById('btn-start-voting').onclick = () => {
     state.socket.emit('start-voting');
-  };
-
-  // Toggle blur on results reveal
-  document.getElementById('btn-toggle-reveal').onclick = () => {
-    const section = document.getElementById('results-reveal-section');
-    const btn = document.getElementById('btn-toggle-reveal');
-    if (!section) return;
-    const isBlurred = section.classList.contains('blurred');
-    section.classList.toggle('blurred');
-    btn.textContent = isBlurred ? 'BLUR' : 'REVEAL';
-    if (isBlurred) { btn.classList.remove('btn-primary'); btn.classList.add('btn-ghost'); }
-    else { btn.classList.remove('btn-ghost'); btn.classList.add('btn-primary'); }
   };
 
   // Reset room
