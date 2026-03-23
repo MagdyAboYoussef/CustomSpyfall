@@ -1206,12 +1206,6 @@ function renderVotingScreen() {
 
 // ─── Results Screen ───────────────────────────────────────────────────────────
 function renderResultsScreen(result) {
-  // Reset blur state — results always start blurred
-  const revealSection = document.getElementById('results-reveal-section');
-  const revealBtn = document.getElementById('btn-toggle-reveal');
-  if (revealSection) revealSection.classList.add('blurred');
-  if (revealBtn) { revealBtn.textContent = 'REVEAL'; revealBtn.classList.remove('btn-ghost'); revealBtn.classList.add('btn-primary'); }
-
   const verdict = document.getElementById('result-verdict');
   const spyNames = result.spyNames || [];
   const multiSpy = spyNames.length > 1;
