@@ -591,6 +591,7 @@ function showScreen(name) {
   if (floatChat) floatChat.style.display = ['lobby','playing','voting'].includes(name) ? '' : 'none';
   // Close any open mobile chat when changing screens
   document.querySelectorAll('.chat-panel.mobile-open').forEach(p => p.classList.remove('mobile-open'));
+  syncKeyboardInset();
 }
 
 function navigateToPhase(phase) {
@@ -2100,7 +2101,7 @@ function setupListeners() {
     floatChat.addEventListener('click', () => {
       const active = document.querySelector('.screen.active');
       const panel = active?.querySelector('.chat-panel');
-      if (panel) panel.classList.add('mobile-open');
+      if (panel) { panel.classList.add('mobile-open'); syncKeyboardInset(); }
     });
   }
 
@@ -2108,8 +2109,36 @@ function setupListeners() {
   document.querySelectorAll('.btn-chat-close').forEach(btn => {
     btn.addEventListener('click', () => {
       document.getElementById(btn.dataset.panel)?.classList.remove('mobile-open');
+      syncKeyboardInset();
     });
   });
+
+  setupKeyboardInset();
+}
+
+// ─── On-screen keyboard ───────────────────────────────────────────────────────
+// The full-screen mobile chat is position:fixed, so a keyboard that only shrinks
+// the *visual* viewport (iOS Safari) would cover its input row. Measure how much
+// is covered and hand it to CSS as --kb-h.
+function syncKeyboardInset() {
+  const vv = window.visualViewport;
+  const root = document.documentElement;
+  if (!vv || !document.querySelector('.chat-panel.mobile-open')) {
+    root.style.removeProperty('--kb-h');
+    return;
+  }
+  const covered = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+  // Ignore small deltas so a retracting browser toolbar doesn't jitter the panel.
+  root.style.setProperty('--kb-h', covered > 80 ? `${Math.round(covered)}px` : '0px');
+}
+
+function setupKeyboardInset() {
+  const vv = window.visualViewport;
+  if (!vv) return;
+  vv.addEventListener('resize', syncKeyboardInset);
+  vv.addEventListener('scroll', syncKeyboardInset);
+  document.addEventListener('focusin', () => setTimeout(syncKeyboardInset, 300));
+  document.addEventListener('focusout', () => setTimeout(syncKeyboardInset, 300));
 }
 
 function setupChatInput(inputId, btnId, panel) {
