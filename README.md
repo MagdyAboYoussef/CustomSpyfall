@@ -3,10 +3,10 @@
 A free, self-hosted multiplayer deduction game inspired by Spyfall — with full support for **custom locations via CSV upload**.
 
 One or more players are secretly the **Spy**. They don't know the location. Everyone else does. Through careful questioning, agents try to expose the spy before time runs out — while the spy tries to blend in and guess the location.
-<img width="1912" height="948" alt="image" src="https://github.com/user-attachments/assets/fa15c676-81f3-4f5a-a1ee-5d471523d35a" />
-<img width="1912" height="948" alt="image" src="https://github.com/user-attachments/assets/c8846f01-8e53-48a2-91e7-a787d7dd5b86" />
-<img width="1912" height="948" alt="image" src="https://github.com/user-attachments/assets/66b5f4e2-b795-4dd2-824f-e48a8942bc08" />
-<img width="1912" height="948" alt="image" src="https://github.com/user-attachments/assets/a4ed83fe-0a82-4270-934e-84bbc7e3c0c8" />
+
+<img width="1894" height="930" alt="image" src="https://github.com/user-attachments/assets/f19e7752-6744-429b-aeff-f7f24f68fa0f" />
+<img width="1345" height="857" alt="image" src="https://github.com/user-attachments/assets/6360114d-7bc8-4a7b-ba15-e62df369910d" />
+
 
 > Built as a free, non-profit hobby project — made for playing with friends. I was not able to find a similar project online while looking up
 > If you want to host it locally the ngrok setup was enough to get it up and running when needed, tried it with custom csv with friends on different categories in discord and was overall fun experience.
