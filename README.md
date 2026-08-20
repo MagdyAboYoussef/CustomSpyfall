@@ -28,7 +28,7 @@ One or more players are secretly the **Spy**. They don't know the location. Ever
    - You are able to enable/disabled locations between rounds, and you can see point history
    - You are also able to view who is ready to vote, and who voted (but not voted for who until the round is over)
 
-**🌐 Play now:** https://customspyfall.fly.dev
+**🌐 Play now:** https://customspyfall.magdy.org
 
 **📂 Source:** https://github.com/MagdyAboYoussef/CustomSpyfall
 
